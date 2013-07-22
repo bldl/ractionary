@@ -50,6 +50,12 @@ by hand, for Racket itself. But at least we get our dictionary.
     syntax/to-string
     ))
 
+;; 'mods' is a list of modules still to examine, by symbolic name.
+;; 'seen' is a set of modules already seen, by symbolic names. 'syms'
+;; is a set of exported symbols, as symbols, regardless of exporting
+;; module or phase level.
+(struct St (mods seen syms) #:transparent #:mutable)
+
 (define (show-symbols mn kind xs)
   (for-each
    (lambda (x)
@@ -59,31 +65,38 @@ by hand, for Racket itself. But at least we get our dictionary.
        (writeln (list mn kind phase (map car lst)))))
    xs))
 
-;; 'seen' is a set of modules not to scan. Returns a set of symbolic
-;; names of all scanned modules and their dependencies.
-(define (scan seen)
-  (for ((mn interesting-modules)
-        #:when (not (set-member? seen mn)))
-      (set! seen (set-add seen mn))
+(define (scan st)
+  (let next ()
+    (define mods (St-mods st))
+    (unless (null? mods)
+      (define mod (car mods))
+      (set-St-mods! st (cdr mods))
+      (define seen (St-seen st))
+      (when (set-member? seen mod)
+        (next))
+      (set-St-seen! st (set-add seen mod))
 
-    ;; We need not resolve relative requires, hence #f. Always yields
-    ;; an actual path.
-    (define path (resolve-module-path mn #f))
+      ;; We need not resolve relative requires, hence #f. Always yields
+      ;; an actual path.
+      (define path (resolve-module-path mod #f))
 
-    ;; Requires actual path as an argument.
-    (define c-exp (get-module-code path))
+      ;; Requires actual path as an argument.
+      (define c-exp (get-module-code path))
+      
+      (let-values (((vals stxs) (module-compiled-exports c-exp)))
+        (show-symbols mod 'values vals)
+        (show-symbols mod 'syntaxes stxs))
     
-    (let-values (((vals stxs) (module-compiled-exports c-exp)))
-      (show-symbols mn 'values vals)
-      (show-symbols mn 'syntaxes stxs))
-    
-    ;; set-union
-    (void))
-  seen)
+      ;; set-union
+
+      (next))))
+      
 
 (define (main)
+  (define st (St interesting-modules (seteq) (seteq)))
+  (scan st)
   (define modnames
-    (sort (map symbol->string (set->list (scan (seteq)))) string<?))
+    (sort (map symbol->string (set->list (St-seen st))) string<?))
   (void))
 
 (main)
