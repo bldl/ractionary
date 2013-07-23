@@ -31,7 +31,12 @@ so perhaps it is possible.
 
 |#
 
-(require common/6/util syntax/moddep)
+(require syntax/moddep)
+
+(define writeln
+  (case-lambda
+    ((datum) (begin (write datum) (newline)))
+    ((datum out) (begin (write datum out) (newline out)))))
 
 (define interesting-modules
   '(racket
