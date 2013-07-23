@@ -145,26 +145,6 @@ so perhaps it is possible.
     syntax/trusted-xforms  
     ))
 
-;; 'mods' is a list of modules still to examine, by symbolic name.
-;; 'seen' is a set of modules already seen, by symbolic names. 'syms'
-;; is a set of exported symbols, as symbols, regardless of exporting
-;; module or phase level.
-(struct St (mods seen syms) #:transparent #:mutable)
-
-(define (add-exports st mn kind xs)
-  (for-each
-   (lambda (x)
-     (define phase (car x))
-     (define lst (cdr x))
-     (when phase
-       ;;(writeln (list mn kind phase (map car lst)))
-       (for-each
-        (lambda (sym)
-          (define syms (St-syms st))
-          (set-St-syms! st (set-add syms sym)))
-        (map car lst))))
-   xs))
-
 (define (mp/symbolic->lib mp)
   `(lib ,(string-append (symbol->string mp) ".rkt")))
 
@@ -178,68 +158,91 @@ so perhaps it is possible.
                 (string->symbol (second r))))))
     (_ #f)))
 
+;;(mp/symbolic->lib 'racket/base)
+;;(mp/lib->symbolic '(lib "racket/base.rkt"))
+
 (define (mp-exclude? mp)
   (regexp-match #rx"/private/"
                 (symbol->string mp)))
 
-;;(mp/symbolic->lib 'racket/base)
-;;(mp/lib->symbolic '(lib "racket/base.rkt"))
+(define (warn msg datum)
+  (printf "WARNING: ~a: ~s~n" msg datum))
 
-(define (scan st)
+(define (scan)
+  ;; 'mods' is a list of modules still to examine, by symbolic name.
+  ;; 'seen' is a set of modules already seen, by symbolic names.
+  ;; 'syms' is a set of exported symbols, as symbols, regardless of
+  ;; exporting module or phase level.
+  (define mods interesting-modules)
+  (define seen (seteq))
+  (define syms (seteq))
+
+  (define (add-exports mn kind xs)
+    (for-each
+     (lambda (x)
+       (define phase (car x))
+       (define lst (cdr x))
+       (when phase
+         ;;(writeln (list mn kind phase (map car lst)))
+         (for-each
+          (lambda (sym)
+            (set! syms (set-add syms sym)))
+          (map car lst))))
+     xs))
+  
   (let next ()
-    (define mods (St-mods st))
-    (unless (null? mods)
-      (define cur-mp (car mods))
-      (set-St-mods! st (cdr mods))
-      (define seen (St-seen st))
-      (when (set-member? seen cur-mp)
-        (next))
-      (set-St-seen! st (set-add seen cur-mp))
+    (if (null? mods)
+        (values seen syms)
+        (let () ;; for a body context
+          (define cur-mp (car mods))
+          (set! mods (cdr mods))
+          (when (set-member? seen cur-mp)
+            (next))
+          (set! seen (set-add seen cur-mp))
 
-      ;; We need not resolve relative requires, hence #f. Always yields
-      ;; an actual path.
-      (define path (resolve-module-path cur-mp #f))
+          ;; We need not resolve relative requires, hence #f. Always yields
+          ;; an actual path.
+          (define path (resolve-module-path cur-mp #f))
 
-      ;; Requires actual path as an argument.
-      (define c-exp (get-module-code path))
+          ;; Requires actual path as an argument.
+          (define c-exp (get-module-code path))
 
-      (unless (mp-exclude? cur-mp)
-        (let-values (((vals stxs) (module-compiled-exports c-exp)))
-          (add-exports st cur-mp 'values vals)
-          (add-exports st cur-mp 'syntaxes stxs)))
+          (unless (mp-exclude? cur-mp)
+            (let-values (((vals stxs) (module-compiled-exports c-exp)))
+              (add-exports cur-mp 'values vals)
+              (add-exports cur-mp 'syntaxes stxs)))
 
-      (let ((imports (module-compiled-imports c-exp)))
-        (for-each
-         (lambda (import)
-           (define phase (car import))
-           (when phase ;; skip label phase
-             (define mpis (cdr import))
-             (define n-mods
-               (filter
-                (lambda (x)
-                  (and x (not (set-member? seen x))))
-                (map
-                 (lambda (mpi)
-                   ;; This gives us 'lib' module paths it seems.
-                   (define t-lib-mp (collapse-module-path-index mpi cur-mp))
-                   (define t-sym-mp (mp/lib->symbolic t-lib-mp))
-                   ;; (unless t-sym-mp
-                   ;;   (printf "WARNING: skipping non-'lib' module path: ~s~n"
-                   ;;           t-lib-mp))
-                   t-sym-mp)
-                 mpis)))
-             ;;(writeln n-mods)
-             (set-St-mods! st (append (St-mods st) n-mods))))
-         imports))
-      (next))))
+          (let ((imports (module-compiled-imports c-exp)))
+            (for-each
+             (lambda (import)
+               (define phase (car import))
+               (when phase ;; skip label phase
+                 (define mpis (cdr import))
+                 (define n-mods
+                   (filter
+                    (lambda (x)
+                      (and x (not (set-member? seen x))))
+                    (map
+                     (lambda (mpi)
+                       ;; This gives us 'lib' module paths it seems.
+                       (define t-lib-mp (collapse-module-path-index mpi cur-mp))
+                       (define t-sym-mp (mp/lib->symbolic t-lib-mp))
+                       ;; (unless t-sym-mp
+                       ;;   (warn "skipping non-'lib' module path"
+                       ;;           t-lib-mp))
+                       t-sym-mp)
+                     mpis)))
+                 ;;(writeln n-mods)
+                 (set! mods (append mods n-mods))))
+             imports))
+          (next)))))
 
 (define (main)
-  (define st (St interesting-modules (seteq) (seteq)))
-  (scan st)
+  (define-values (mods syms) (scan))
   (define modnames
-    (set->list (St-seen st)))
+    (set->list mods))
   (define exports
-    (set->list (St-syms st)))
+    (set->list syms))
   (define extras
     (list "#t" "#f" "#lang" "FIXME" "TODO"))
   (define all-names
