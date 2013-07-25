@@ -249,7 +249,7 @@ so perhaps it is possible.
   (define exports
     (set->list syms))
   (define extras
-    (list "#t" "#f" "#lang" "FIXME" "TODO"))
+    (list "#t" "#f" "#lang" "DEPRECATED" "FIXME" "TODO"))
   (define all-names
     (sort (append
            (filter
