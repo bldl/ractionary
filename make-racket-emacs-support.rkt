@@ -24,11 +24,6 @@ being confusing to highlight all syntax as keywords. So for now we are
 not concerned with highlighting (let alone indentation), but just want
 a dictionary.
 
-We presently have no hover help for the words in the dictionary. Do
-not know if there is a programmatic way to query the docs for a given
-symbol in a given module. But 'raco' almost does that sort of thing,
-so perhaps it is possible.
-
 |#
 
 (require racket/cmdline syntax/moddep)
@@ -37,6 +32,11 @@ so perhaps it is possible.
   (case-lambda
     ((datum) (begin (write datum) (newline)))
     ((datum out) (begin (write datum out) (newline out)))))
+
+(define pretty-println
+  (case-lambda
+    ((datum) (begin (pretty-print datum) (newline)))
+    ((datum out) (begin (pretty-print datum out) (newline out)))))
 
 (define interesting-modules
   '(racket
@@ -173,26 +173,46 @@ so perhaps it is possible.
 (define (warn msg datum)
   (printf "WARNING: ~a: ~s~n" msg datum))
 
+(define (new-ix)
+  (make-hasheq))
+
+;; 'sym' is an exported symbol. 'mn' is a symbolic module name.
+;; 'phase' is a phase level. 'kind' is either 'def' (for a value) or
+;; 'form' (for syntax).
+(define (ix-add ix sym mn phase kind)
+  (define lst (hash-ref ix sym '()))
+  (hash-set! ix sym 
+	     (cons (list mn phase kind) lst)))
+
+(define (ix-syms ix)
+  (hash-keys ix))
+
+;; Returns (values seen syms), see below.
 (define (scan)
   ;; 'mods' is a list of modules still to examine, by symbolic name.
-  ;; 'seen' is a set of modules already seen, by symbolic names.
-  ;; 'syms' is a set of exported symbols, as symbols, regardless of
-  ;; exporting module or phase level.
   (define mods interesting-modules)
+  ;; 'seen' is a set of modules already seen, by symbolic names.
   (define seen (seteq))
-  (define syms (seteq))
+  ;; 'syms' is a hash map of exported symbols, with symbols as keys,
+  ;; regardless of exporting module or phase level.
+  (define syms (new-ix))
 
+  ;; 'mn' is a symbolic module name. 'kind' is either 'def' (for a
+  ;; value) or 'form' (for syntax).
   (define (add-exports mn kind xs)
+    ;;(pretty-println (list mn kind xs))
     (for-each
      (lambda (x)
        (define phase (car x))
        (define lst (cdr x))
-       (when phase
-         ;;(writeln (list mn kind phase (map car lst)))
-         (for-each
-          (lambda (sym)
-            (set! syms (set-add syms sym)))
-          (map car lst))))
+       ;;(writeln (list mn kind phase x)) (exit)
+       (for-each
+	(lambda (y)
+	  (define sym (car y))
+	  (define origin-lst (cadr y))
+	  ;;(writeln `(module ,mn kind ,kind phase ,phase symbol ,sym origin ,origin-lst)) (exit)
+	  (ix-add syms sym mn phase kind))
+	lst))
      xs))
   
   (let next ()
@@ -214,8 +234,8 @@ so perhaps it is possible.
 
           (unless (mp-exclude? cur-mp)
             (let-values (((vals stxs) (module-compiled-exports c-exp)))
-              (add-exports cur-mp 'values vals)
-              (add-exports cur-mp 'syntaxes stxs)))
+              (add-exports cur-mp 'def vals)
+              (add-exports cur-mp 'form stxs)))
 
           (let ((imports (module-compiled-imports c-exp)))
             (for-each
@@ -242,11 +262,11 @@ so perhaps it is possible.
           (next)))))
 
 (define (make-dictionary filename)
-  (define-values (mods syms) (scan))
+  (define-values (mods ix) (scan))
   (define modnames
     (set->list mods))
   (define exports
-    (set->list syms))
+    (ix-syms ix))
   (define extras
     (list "#t" "#f" "#lang" "DEPRECATED" "FIXME" "TODO"))
   (define all-names
