@@ -152,7 +152,15 @@ a dictionary.
     syntax/template  
     syntax/to-string  
     syntax/toplevel  
-    syntax/trusted-xforms  
+    syntax/trusted-xforms
+
+    scribble/xref
+
+    setup/dirs
+    setup/xref
+
+    net/url
+    net/url-structs
     ))
 
 (define (mp/symbolic->lib mp)
