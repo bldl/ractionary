@@ -26,8 +26,6 @@ a dictionary.
 
 |#
 
-(require racket/cmdline syntax/moddep)
-
 (define writeln
   (case-lambda
     ((datum) (begin (write datum) (newline)))
@@ -37,6 +35,13 @@ a dictionary.
   (case-lambda
     ((datum) (begin (pretty-print datum) (newline)))
     ((datum out) (begin (pretty-print datum out) (newline out)))))
+
+(define (warn msg datum)
+  (printf "WARNING: ~a: ~s~n" msg datum))
+
+;;; 
+;;; module paths
+;;; 
 
 (define interesting-modules
   '(racket
@@ -170,8 +175,11 @@ a dictionary.
   (regexp-match #rx"/private/"
                 (symbol->string mp)))
 
-(define (warn msg datum)
-  (printf "WARNING: ~a: ~s~n" msg datum))
+;;; 
+;;; symbol index
+;;; 
+
+(require syntax/moddep)
 
 (define (just-label? v)
   (andmap (lambda (x)
@@ -274,8 +282,11 @@ a dictionary.
              imports))
           (next)))))
 
-(define (make-dictionary filename)
-  (define-values (mods ix) (scan))
+;;; 
+;;; dictionary generation
+;;; 
+
+(define (make-dictionary-file mods ix filename)
   (define modnames
     (set->list mods))
   (define exports
@@ -301,12 +312,121 @@ a dictionary.
    #:exists 'truncate/replace)
   (void))
 
+;;; 
+;;; URL lookup file generation
+;;; 
+
+(require net/url net/url-structs setup/xref scribble/xref)
+
+(define (under? pat s)
+  (and 
+   (regexp-match 
+    (regexp 
+     (string-append "^" 
+		    (regexp-quote pat)
+		    "(?:/|$)")) s)
+   #t))
+
+(define (compute-rank v)
+  (define mn (first v))
+  (define ms (symbol->string mn))
+  (define phase (second v))
+  (+
+   (cond
+    ((eq? mn 'racket/base) 100)
+    ((eq? mn 'racket) 90)
+    ((under? "racket" ms) 80)
+    ((under? "syntax" ms) 70)
+    ((under? "scribble" ms) 50)
+    ((under? "setup" ms) 40)
+    ((under? "net" ms) 30)
+    ((under? "unstable" ms) 20)
+    ((under? "srfi" ms) 10)
+    (else 0))
+   (- 9 (abs phase))))
+
+;; (list/c (listof mn phase kind))
+(define (rank-vs vs)
+  ;;(writeln (map (lambda (x) (cons (compute-rank x) x)) vs)) (exit)
+  (sort vs > #:key compute-rank #:cache-keys? #t))
+
+(define (path+anchor->url-string path anchor)
+  (define url
+    (url->string
+     (path->url path)))
+  (when anchor
+    (set! url (string-append url "#" anchor)))
+  url)
+
+(define (elisp-escape-symbol s)
+  (set! s (symbol->string s))
+  (regexp-replace* #rx"([^a-zA-Z0-9+=*/_~!@$%^&:<>{}?-])" s "\\\\\\1"))
+
+(define (make-url-table-file ix filename)
+  (define xref (load-collections-xref))
+  (define lst '())
+  (for (((k v) ix)
+	#:when (not-just-label? v))
+    (define best-v (first (rank-vs v)))
+    ;;(writeln `(best ,k ,best-v))
+    (define mn (first best-v))
+    (define phase (second best-v))
+    (define tag (xref-binding->definition-tag 
+		 xref 
+		 (list mn k) phase))
+    (when tag
+      (define-values (path anchor)
+	(xref-tag->path+anchor xref tag))
+      (when path
+	;; 'anchor' may be #f.
+	(set! lst (cons 
+		   (list k (path+anchor->url-string path anchor)) 
+		   lst)))))
+  (set! lst
+	(sort lst string<?
+	      #:key (lambda (x)
+		      (symbol->string (car x)))))
+
+  (call-with-output-file* 
+   filename 
+   (lambda (out)
+     (displayln ";; generated -- do not edit" out)
+     (displayln "(defvar racket-url-lookup-table '(" out)
+     (for-each 
+      (lambda (x)
+	(display "(" out)
+	(display (elisp-escape-symbol (first x)) out)
+	(display " " out)
+	(write (second x) out)
+	(displayln ")" out))
+      lst)
+     (displayln ") \"API doc URLs for Racket symbols\")" out))
+   #:exists 'truncate/replace)
+
+  (void))
+
+;;; 
+;;; main
+;;; 
+
+(require racket/cmdline)
+
 (define dictionary-file (make-parameter #f))
+(define url-table-file (make-parameter #f))
 
 (module* main #f
   (command-line
    #:once-each
    (("-d" "--dictionary") filename "write dictionary"
-    (dictionary-file filename)))
-  (when (dictionary-file)
-    (make-dictionary (dictionary-file))))
+    (dictionary-file filename))
+   (("-u" "--url-table") filename "write URL lookup table"
+    (url-table-file filename))
+   )
+  (when (or (dictionary-file)
+	    (url-table-file))
+    (define-values (mods ix) (scan))
+    (when (dictionary-file)
+      (make-dictionary-file mods ix (dictionary-file)))
+    (when (url-table-file)
+      (make-url-table-file ix (url-table-file)))
+    ))
