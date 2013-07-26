@@ -316,7 +316,7 @@ a dictionary.
 ;;; URL lookup file generation
 ;;; 
 
-(require net/url net/url-structs setup/xref scribble/xref)
+(require net/url net/url-structs setup/dirs setup/xref scribble/xref)
 
 (define (under? pat s)
   (and 
@@ -391,6 +391,10 @@ a dictionary.
    filename 
    (lambda (out)
      (displayln ";; generated -- do not edit" out)
+
+     (writeln `(defvar racket-doc-dir ,(path->string (find-doc-dir))
+		 "Racket installation's 'doc' directory") out)
+
      (displayln "(defvar racket-url-lookup-table '(" out)
      (for-each 
       (lambda (x)
