@@ -31,7 +31,7 @@ so perhaps it is possible.
 
 |#
 
-(require syntax/moddep)
+(require racket/cmdline syntax/moddep)
 
 (define writeln
   (case-lambda
@@ -237,12 +237,11 @@ so perhaps it is possible.
                        ;;           t-lib-mp))
                        t-sym-mp)
                      mpis)))
-                 ;;(writeln n-mods)
                  (set! mods (append mods n-mods))))
              imports))
           (next)))))
 
-(define (main)
+(define (make-dictionary filename)
   (define-values (mods syms) (scan))
   (define modnames
     (set->list mods))
@@ -260,8 +259,21 @@ so perhaps it is possible.
                 (filter (negate mp-exclude?) modnames))
            extras)
           string<?))
-  ;;(pretty-println (list modnames exports))
-  (for-each displayln all-names)
+  (call-with-output-file* 
+   filename 
+   (lambda (out)
+     (for-each 
+      (curryr displayln out)
+      all-names))
+   #:exists 'truncate/replace)
   (void))
 
-(main)
+(define dictionary-file (make-parameter #f))
+
+(module* main #f
+  (command-line
+   #:once-each
+   (("-d" "--dictionary") filename "write dictionary"
+    (dictionary-file filename)))
+  (when (dictionary-file)
+    (make-dictionary (dictionary-file))))
