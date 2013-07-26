@@ -173,6 +173,12 @@ a dictionary.
 (define (warn msg datum)
   (printf "WARNING: ~a: ~s~n" msg datum))
 
+(define (just-label? v)
+  (andmap (lambda (x)
+	    (not (second x))) v))
+
+(define not-just-label? (negate just-label?))
+
 (define (new-ix)
   (make-hasheq))
 
@@ -184,8 +190,15 @@ a dictionary.
   (hash-set! ix sym 
 	     (cons (list mn phase kind) lst)))
 
+;; Returns a list of symbols.
 (define (ix-syms ix)
   (hash-keys ix))
+
+;; Returns a seteq of symbols.
+(define (ix-syms/non-label ix)
+  (for/seteq (((k v) ix)
+	      #:when (not-just-label? v))
+    k))
 
 ;; Returns (values seen syms), see below.
 (define (scan)
@@ -266,7 +279,7 @@ a dictionary.
   (define modnames
     (set->list mods))
   (define exports
-    (ix-syms ix))
+    (set->list (ix-syms/non-label ix)))
   (define extras
     (list "#t" "#f" "#lang" "DEPRECATED" "FIXME" "TODO"))
   (define all-names
