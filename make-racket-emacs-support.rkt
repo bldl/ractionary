@@ -180,8 +180,17 @@ a dictionary.
 ;;(mp/lib->symbolic '(lib "racket/base.rkt"))
 
 (define (mp-exclude? mp)
-  (regexp-match #rx"/private/"
+  (regexp-match #rx"(?:/private/|^(?:mz(?:lib|scheme)|scheme)(?:/|$))"
                 (symbol->string mp)))
+
+#;
+(begin
+  (mp-exclude? 'foo/private/bar)
+  (mp-exclude? 'mzlib)
+  (mp-exclude? 'mzscheme/foo)
+  (mp-exclude? 'scheme)
+  (mp-exclude? 'scheme/gui)
+  (mp-exclude? 'racket))
 
 ;;; 
 ;;; symbol index
