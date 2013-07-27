@@ -198,12 +198,12 @@ a dictionary.
 (define (new-ix)
   (make-hasheq))
 
-;; 'sym' is an exported symbol. 'mn' is a symbolic module name.
+;; 'sym' is an exported symbol. 'mp' is a symbolic module name.
 ;; 'phase' is a phase level. 'kind' is either 'def' (for a value) or
 ;; 'form' (for syntax).
-(define (ix-add ix sym mn phase kind)
+(define (ix-add ix sym mp phase kind)
   (define lst (hash-ref ix sym '()))
-  (define v (list mn phase kind))
+  (define v (list mp phase kind))
   (unless (member v lst)
     (hash-set! ix sym (cons v lst))))
 
@@ -227,21 +227,21 @@ a dictionary.
   ;; regardless of exporting module or phase level.
   (define syms (new-ix))
 
-  ;; 'mn' is a symbolic module name. 'kind' is either 'def' (for a
+  ;; 'mp' is a symbolic module name. 'kind' is either 'def' (for a
   ;; value) or 'form' (for syntax).
-  (define (add-exports mn kind xs)
-    ;;(pretty-println (list mn kind xs))
+  (define (add-exports mp kind xs)
+    ;;(pretty-println (list mp kind xs))
     (for-each
      (lambda (x)
        (define phase (car x))
        (define lst (cdr x))
-       ;;(writeln (list mn kind phase x)) (exit)
+       ;;(writeln (list mp kind phase x)) (exit)
        (for-each
 	(lambda (y)
 	  (define sym (car y))
 	  (define origin-lst (cadr y))
-	  ;;(writeln `(module ,mn kind ,kind phase ,phase symbol ,sym origin ,origin-lst)) (exit)
-	  (ix-add syms sym mn phase kind))
+	  ;;(writeln `(module ,mp kind ,kind phase ,phase symbol ,sym origin ,origin-lst)) (exit)
+	  (ix-add syms sym mp phase kind))
 	lst))
      xs))
   
@@ -327,6 +327,7 @@ a dictionary.
    #:exists 'truncate/replace)
   (void))
 
+;; Supports the label phase (i.e., #f) also.
 (define (phase<? x y)
   (cond
    ((and (not x) (not y))
@@ -431,11 +432,12 @@ a dictionary.
 		    "(?:/|$)")) s)
    #t))
 
-(define (module-rank mn)
-  (define ms (symbol->string mn))
+;; 'mp' is a symbolic module path.
+(define (module-rank mp)
+  (define ms (symbol->string mp))
   (cond
-   ((eq? mn 'racket/base) 100)
-   ((eq? mn 'racket) 90)
+   ((eq? mp 'racket/base) 100)
+   ((eq? mp 'racket) 90)
    ((under? "racket" ms) 80)
    ((under? "syntax" ms) 70)
    ((under? "scribble" ms) 50)
@@ -448,12 +450,12 @@ a dictionary.
    (else 0)))
 
 (define (module-phase-rank v)
-  (define mn (first v))
+  (define mp (first v))
   (define phase (second v))
-  (+ (module-rank mn)
+  (+ (module-rank mp)
      (- 9 (abs phase))))
 
-;; (list/c (listof mn phase kind))
+;; (list/c (listof mp phase kind))
 (define (rank-vs vs)
   ;;(writeln (map (lambda (x) (cons (module-phase-rank x) x)) vs)) (exit)
   (sort vs > #:key module-phase-rank #:cache-keys? #t))
@@ -477,11 +479,11 @@ a dictionary.
 	#:when (not-just-label? v))
     (define best-v (first (rank-vs v)))
     ;;(writeln `(best ,k ,best-v))
-    (define mn (first best-v))
+    (define mp (first best-v))
     (define phase (second best-v))
     (define tag (xref-binding->definition-tag 
 		 xref 
-		 (list mn k) phase))
+		 (list mp k) phase))
     (when tag
       (define-values (path anchor)
 	(xref-tag->path+anchor xref tag))
