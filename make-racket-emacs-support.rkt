@@ -202,10 +202,12 @@ a dictionary.
 ;; 'phase' is a phase level. 'kind' is either 'def' (for a value) or
 ;; 'form' (for syntax).
 (define (ix-add ix sym mp phase kind)
-  (define lst (hash-ref ix sym '()))
-  (define v (list mp phase kind))
-  (unless (member v lst)
-    (hash-set! ix sym (cons v lst))))
+  (unless (or (not phase)
+	      (mp-exclude? mp))
+    (define lst (hash-ref ix sym '()))
+    (define v (list mp phase kind))
+    (unless (member v lst)
+      (hash-set! ix sym (cons v lst)))))
 
 ;; Returns a list of symbols.
 (define (ix-syms-list ix)
@@ -307,7 +309,7 @@ a dictionary.
   (define modnames
     (set->list mods))
   (define exports
-    (set->list (ix-syms-seteq/non-label ix)))
+    (ix-syms-list ix))
   (define all-names
     (sort (append
            (filter
@@ -401,11 +403,16 @@ a dictionary.
 	   ;; extras
            extra-words)
           string<? #:key car))
+  (define (el-basename path)
+    (let-values 
+	(((base name dir) (split-path path)))
+      (path->string (path-replace-suffix name ""))))
   (define (w-f out)
     (displayln ";; generated -- do not edit" out)
     (displayln "(defvar racket-url-lookup-table '(" out)
     (for-each (curryr writeln out) all-names)
     (displayln ") \"public exports in Racket\")" out)
+    (displayln (format "(provide '~a)" (el-basename filename)) out)
     (void))
   (call-with-output-file* 
    filename w-f

@@ -2,7 +2,7 @@ default : dict
 
 -include local.mk
 
-all : dict url-table
+all : dict hover-dict url-table
 
 dict :
 	./make-racket-emacs-support.rkt --dictionary scheme-mode
