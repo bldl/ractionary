@@ -203,15 +203,16 @@ a dictionary.
 ;; 'form' (for syntax).
 (define (ix-add ix sym mn phase kind)
   (define lst (hash-ref ix sym '()))
-  (hash-set! ix sym 
-	     (cons (list mn phase kind) lst)))
+  (define v (list mn phase kind))
+  (unless (member v lst)
+    (hash-set! ix sym (cons v lst))))
 
 ;; Returns a list of symbols.
-(define (ix-syms ix)
+(define (ix-syms-list ix)
   (hash-keys ix))
 
 ;; Returns a seteq of symbols.
-(define (ix-syms/non-label ix)
+(define (ix-syms-seteq/non-label ix)
   (for/seteq (((k v) ix)
 	      #:when (not-just-label? v))
     k))
@@ -294,13 +295,19 @@ a dictionary.
 ;;; dictionary generation
 ;;; 
 
-(define (make-dictionary-file mods ix filename)
+(define extra-words
+  '(("#t" "boolean literal") 
+    ("#f" "boolean literal") 
+    ("#lang" "directive") 
+    ("DEPRECATED" "comment")
+    ("FIXME" "comment")
+    ("TODO" "comment")))
+
+(define (make-dictionary-file/plain mods ix filename)
   (define modnames
     (set->list mods))
   (define exports
-    (set->list (ix-syms/non-label ix)))
-  (define extras
-    (list "#t" "#f" "#lang" "DEPRECATED" "FIXME" "TODO"))
+    (set->list (ix-syms-seteq/non-label ix)))
   (define all-names
     (sort (append
            (filter
@@ -309,7 +316,7 @@ a dictionary.
             (map symbol->string exports))
            (map symbol->string 
                 (filter (negate mp-exclude?) modnames))
-           extras)
+           (map car extra-words))
           string<?))
   (call-with-output-file* 
    filename 
@@ -319,6 +326,95 @@ a dictionary.
       all-names))
    #:exists 'truncate/replace)
   (void))
+
+(define (phase<? x y)
+  (cond
+   ((and (not x) (not y))
+    #f)
+   ((not x)
+    #f)
+   ((not y)
+    #t)
+   (else
+    (< x y))))
+
+(define (collate-by-module lst)
+  (define (sort-by-phase xs)
+    (sort xs phase<? #:key car))
+  (define h (make-hasheq))
+  (for ((v lst))
+    (define e (hash-ref h (car v) '()))
+    (set! e (cons (cdr v) e))
+    (hash-set! h (car v) e))
+  (for/list (((k v) h))
+    (list k (sort-by-phase v))))
+
+(define (hover-text-from-ix ix-e)
+  (define name (first ix-e))
+  (define lst (collate-by-module (second ix-e)))
+  (set! lst
+	(sort lst > 
+	      #:key (lambda (x) (module-rank (car x)))
+	      #:cache-keys? #t))
+  ;;(writeln (list 'collated name lst))
+  (define (mk-phase-text x)
+    (define phase (first x))
+    (define kind (second x))
+    (format "~a~a" phase (if (eq? kind 'def) "v" "s")))
+  (define (mk-sq-text x)
+    (string-join
+     (map mk-phase-text x)
+     ","))
+  (define (mk-mod-text x)
+    (format "~a[~a]" (first x) (mk-sq-text (second x))))
+  (define txt
+    (string-join
+     (map mk-mod-text lst)       
+     "\n"))
+  ;;(writeln (list 'text name txt))
+  (list name txt))
+
+(define (make-dictionary-file/hover mods ix filename)
+  (define modnames
+    (set->list mods))
+  (define exports
+    (let ()
+      (define lst
+	(for/list (((k v) ix)
+		   #:when (not-just-label? v))
+	  (list (symbol->string k) v)))
+      (set! lst (filter
+		 (lambda (e)
+		   (> (string-length (car e)) 1))
+		 lst))
+      (map hover-text-from-ix lst)))
+  (define all-names
+    (sort (append
+	   ;; exported names
+	   exports
+	   ;; module names
+           (map 
+	    (lambda (x)
+	      (list (symbol->string x) "module"))
+	    (filter (negate mp-exclude?) modnames))
+	   ;; extras
+           extra-words)
+          string<? #:key car))
+  (define (w-f out)
+    (displayln ";; generated -- do not edit" out)
+    (displayln "(defvar racket-url-lookup-table '(" out)
+    (for-each (curryr writeln out) all-names)
+    (displayln ") \"public exports in Racket\")" out)
+    (void))
+  (call-with-output-file* 
+   filename w-f
+   #:exists 'truncate/replace)
+  (void))
+
+(define (make-dictionary-file mods ix filename)
+  (if (hover-help?)
+      (make-dictionary-file/hover mods ix filename)
+      (make-dictionary-file/plain mods ix filename)))
 
 ;;; 
 ;;; URL lookup file generation
@@ -335,28 +431,32 @@ a dictionary.
 		    "(?:/|$)")) s)
    #t))
 
-(define (compute-rank v)
-  (define mn (first v))
+(define (module-rank mn)
   (define ms (symbol->string mn))
+  (cond
+   ((eq? mn 'racket/base) 100)
+   ((eq? mn 'racket) 90)
+   ((under? "racket" ms) 80)
+   ((under? "syntax" ms) 70)
+   ((under? "scribble" ms) 50)
+   ((under? "setup" ms) 40)
+   ((under? "net" ms) 30)
+   ((under? "unstable" ms) 20)
+   ((under? "srfi" ms) 10)
+   ((under? "mzscheme" ms) -10)
+   ((under? "mzlib" ms) -20)
+   (else 0)))
+
+(define (module-phase-rank v)
+  (define mn (first v))
   (define phase (second v))
-  (+
-   (cond
-    ((eq? mn 'racket/base) 100)
-    ((eq? mn 'racket) 90)
-    ((under? "racket" ms) 80)
-    ((under? "syntax" ms) 70)
-    ((under? "scribble" ms) 50)
-    ((under? "setup" ms) 40)
-    ((under? "net" ms) 30)
-    ((under? "unstable" ms) 20)
-    ((under? "srfi" ms) 10)
-    (else 0))
-   (- 9 (abs phase))))
+  (+ (module-rank mn)
+     (- 9 (abs phase))))
 
 ;; (list/c (listof mn phase kind))
 (define (rank-vs vs)
-  ;;(writeln (map (lambda (x) (cons (compute-rank x) x)) vs)) (exit)
-  (sort vs > #:key compute-rank #:cache-keys? #t))
+  ;;(writeln (map (lambda (x) (cons (module-phase-rank x) x)) vs)) (exit)
+  (sort vs > #:key module-phase-rank #:cache-keys? #t))
 
 (define (path+anchor->url-string path anchor)
   (define url
@@ -424,6 +524,7 @@ a dictionary.
 (require racket/cmdline)
 
 (define dictionary-file (make-parameter #f))
+(define hover-help? (make-parameter #f))
 (define url-table-file (make-parameter #f))
 
 (module* main #f
@@ -431,6 +532,8 @@ a dictionary.
    #:once-each
    (("-d" "--dictionary") filename "write dictionary"
     (dictionary-file filename))
+   (("--hover") "include Help strings in dictionary"
+    (hover-help? #t))
    (("-u" "--url-table") filename "write URL lookup table"
     (url-table-file filename))
    )
