@@ -306,6 +306,8 @@ a dictionary.
 ;;; dictionary generation
 ;;; 
 
+(require "blueboxes.rkt")
+
 (define extra-words
   '(("#t" "boolean literal") 
     ("#f" "boolean literal") 
@@ -361,13 +363,14 @@ a dictionary.
   (for/list (((k v) h))
     (list k (sort-by-phase v))))
 
+(define (collate-by-module-and-rank lst)
+  (sort (collate-by-module lst) > 
+	#:key (lambda (x) (module-rank (car x)))
+	#:cache-keys? #t))
+
 (define (hover-text-from-ix ix-e)
   (define name (first ix-e))
-  (define lst (collate-by-module (second ix-e)))
-  (set! lst
-	(sort lst > 
-	      #:key (lambda (x) (module-rank (car x)))
-	      #:cache-keys? #t))
+  (define lst (collate-by-module-and-rank (second ix-e)))
   ;;(writeln (list 'collated name lst))
   (define (mk-phase-text x)
     (define phase (first x))
@@ -386,20 +389,42 @@ a dictionary.
   ;;(writeln (list 'text name txt))
   (list name txt))
 
+;; TODO getting signature only for very few names - we probably have to choose the most highly ranked and then look up based on original export
+(define (hover-text-from-blueboxes files->tag->offset ix-e)
+  (define name (first ix-e))
+  (define lst (collate-by-module-and-rank (second ix-e)))
+  (define sym (third ix-e))
+  (define mod-spec (first lst))
+  (define mod-lib (mp/symbolic->lib (first mod-spec)))
+  (define kind (second (first (second mod-spec))))
+  (define tag (list kind (list mod-lib sym)))
+  (define strs (fetch-strs-for-single-tag files->tag->offset tag))
+  (if (not strs)
+      (hover-text-from-ix ix-e)
+      (list name
+	    (string-join
+	     (map replace-weird-spaces strs)
+	     "\n"))))
+
 (define (make-dictionary-file/hover mods ix filename)
+  (define mk-hover
+    (if (blueboxes?)
+	(let ((files->tag->offset (fetch-files->tag->offset)))
+	  (lambda (ix-e)
+	    (hover-text-from-blueboxes files->tag->offset ix-e)))
+	hover-text-from-ix))
   (define modnames
     (set->list mods))
   (define exports
     (let ()
       (define lst
-	(for/list (((k v) ix)
-		   #:when (not-just-label? v))
-	  (list (symbol->string k) v)))
+	(for/list (((k v) ix))
+	  (list (symbol->string k) v k)))
       (set! lst (filter
 		 (lambda (e)
 		   (> (string-length (car e)) 1))
 		 lst))
-      (map hover-text-from-ix lst)))
+      (map mk-hover lst)))
   (define all-names
     (sort (append
 	   ;; exported names
@@ -541,6 +566,7 @@ a dictionary.
 
 (require racket/cmdline)
 
+(define blueboxes? (make-parameter #f))
 (define dictionary-file (make-parameter #f))
 (define hover-help? (make-parameter #f))
 (define url-table-file (make-parameter #f))
@@ -548,6 +574,8 @@ a dictionary.
 (module* main #f
   (command-line
    #:once-each
+   (("--signatures") "use signatures as Help strings"
+    (blueboxes? #t))
    (("-d" "--dictionary") filename "write dictionary"
     (dictionary-file filename))
    (("--hover") "include Help strings in dictionary"

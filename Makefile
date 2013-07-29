@@ -8,7 +8,7 @@ dict :
 	./make-racket-emacs-support.rkt --dictionary scheme-mode
 
 hover-dict :
-	./make-racket-emacs-support.rkt --dictionary racket-exports.el --hover
+	./make-racket-emacs-support.rkt --dictionary racket-exports.el --hover --signatures
 	emacs -Q -L . -batch -f batch-byte-compile racket-exports.el
 
 url-table :
