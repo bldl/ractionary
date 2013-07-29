@@ -196,12 +196,20 @@ a dictionary.
   (mp/lib->symbolic '(quote #%kernel))
   (mp/lib->symbolic ''#%kernel))
 
+(define (mp/symbolic->string mp)
+  (match mp
+    ((list 'quote sym)
+     (format "'~a" sym))
+    (_ (symbol->string mp))))
+
 (define (mp-exclude? mp)
   (match mp
     ((list 'lib s)
      (regexp-match 
       #rx"(?:/private/|^(?:mz(?:lib|scheme)|scheme)(?:/|$))"
       s))
+    ((list 'submod _ ...)
+     #t)
     (_ #f)))
 
 #;
@@ -441,7 +449,17 @@ a dictionary.
 
 (define (make-dictionary-file/plain mods ix filename)
   (define modnames
-    (set->list mods))
+    (filter
+     values
+     (map
+      (lambda (mp)
+	(if (mp-exclude? mp)
+	    #f
+	    (let ()
+	      (define sym (mp/lib->symbolic mp))
+	      (and sym (mp/symbolic->string sym)))))
+      (set->list mods))))
+  ;;(pretty-println modnames)
   (define exports
     (ix-syms-list ix))
   (define all-names
@@ -450,8 +468,7 @@ a dictionary.
             (lambda (s)
               (> (string-length s) 1))
             (map symbol->string exports))
-           (map symbol->string 
-                (filter (negate mp-exclude?) modnames))
+	   modnames
            (map car extra-words))
           string<?))
   (call-with-output-file* 
