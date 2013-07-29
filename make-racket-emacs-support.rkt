@@ -3,9 +3,6 @@
 
 #|
 
-Currently this tool only builds a dictionary of some of the more
-prominent public Racket names.
-
 For a specified set of modules, we record all exports, and examine all
 imports. The indirect dependencies of just about any given module are
 huge (just use show-import-tree to see), and so we want to make sure
@@ -44,7 +41,9 @@ a dictionary.
 ;;; 
 
 (define interesting-modules
-  '(racket
+  '('#%kernel
+
+    racket
 
     racket/async-channel  
     racket/base  
@@ -163,11 +162,24 @@ a dictionary.
     net/url-structs
     ))
 
+(define (mp-primitive? mp)
+  (match mp
+    ((list 'quote _) #t)
+    (_ #f)))
+
+(define (mp-submod? mp)
+  (match mp
+    ((list 'submod _ ...) #t)
+    (else #f)))
+
 (define (mp/symbolic->lib mp)
-  `(lib ,(string-append (symbol->string mp) ".rkt")))
+  (match mp
+   ((list 'quote _) mp)
+   ((? symbol?) `(lib ,(string-append (symbol->string mp) ".rkt")))))
 
 (define (mp/lib->symbolic mp)
   (match mp
+    ((list 'quote (? symbol? sym)) mp)
     ((list 'lib s)
      (if (not (string? s))
          #f
@@ -176,21 +188,99 @@ a dictionary.
                 (string->symbol (second r))))))
     (_ #f)))
 
-;;(mp/symbolic->lib 'racket/base)
-;;(mp/lib->symbolic '(lib "racket/base.rkt"))
+#;
+(begin
+  (mp/symbolic->lib 'racket/base)
+  (mp/lib->symbolic '(lib "racket/base.rkt"))
+  (mp/symbolic->lib ''#%kernel)
+  (mp/lib->symbolic '(quote #%kernel))
+  (mp/lib->symbolic ''#%kernel))
 
 (define (mp-exclude? mp)
-  (regexp-match #rx"(?:/private/|^(?:mz(?:lib|scheme)|scheme)(?:/|$))"
-                (symbol->string mp)))
+  (match mp
+    ((list 'lib s)
+     (regexp-match 
+      #rx"(?:/private/|^(?:mz(?:lib|scheme)|scheme)(?:/|$))"
+      s))
+    (_ #f)))
 
 #;
 (begin
-  (mp-exclude? 'foo/private/bar)
-  (mp-exclude? 'mzlib)
-  (mp-exclude? 'mzscheme/foo)
-  (mp-exclude? 'scheme)
-  (mp-exclude? 'scheme/gui)
-  (mp-exclude? 'racket))
+  (mp-exclude? ''#%kernel)
+  (mp-exclude? '(lib "foo/private/bar.rkt"))
+  (mp-exclude? '(lib "racket.rkt"))
+  )
+
+;;; 
+;;; blueboxes index
+;;; 
+
+(define (build-tag-index files->tag->offset)
+  (define ix (make-hash))
+  (for-each
+   (lambda (x)
+     (define h (third x))
+     (for (((tag v) h))
+       (match tag
+	 ((list kind (list mp name))
+	  (define ix-k `(,mp ,name))
+	  (define n-strs 
+	    (cons
+	     (format "~a in ~s:" kind mp)
+	     (map
+	      replace-weird-spaces
+	      (fetch-strs-for-single-tag files->tag->offset tag))))
+	  (define o-strs (hash-ref ix ix-k #f))
+	  (hash-set! ix ix-k (if o-strs (append o-strs n-strs) n-strs)))
+	 (_ (void)))))
+   files->tag->offset)
+  ix)
+
+(define (under? pat s)
+  (and 
+   (regexp-match 
+    (regexp 
+     (string-append "^" 
+		    (regexp-quote pat)
+		    "(?:/|$)")) s)
+   #t))
+
+(define (mp-rank mp)
+  (match mp
+    ((list 'quote sym)
+     (cond
+      ((eq? '#%kernel sym) 200)
+      ((eq? '#%builtin sym) 190)
+      (else 0)))
+    ((list 'lib str)
+     (cond
+      ((under? "racket/base" str) 120)
+      ((under? "racket" str) 110)
+      ((under? "syntax" str) 70)
+      ((under? "scribble" str) 50)
+      ((under? "setup" str) 40)
+      ((under? "net" str) 30)
+      ((under? "unstable" str) 20)
+      ((under? "srfi" str) 10)
+      ((under? "mzscheme" str) -10)
+      ((under? "mzlib" str) -20)
+      (else 0)))
+    (_ -50)))
+
+;; Keys the index just by symbol name by choosing the "most central"
+;; module that has a given symbol.
+(define (rank-tag-index ix)
+  (define ranks (make-hasheq))
+  (define n-ix (make-hasheq))
+  (for (((k v) ix))
+    (define mp (first k))
+    (define name (second k))
+    (define t-rank (mp-rank mp))
+    (define o-rank (hash-ref ranks name #f))
+    (unless (and o-rank (> o-rank t-rank))
+      (hash-set! ranks name t-rank)
+      (hash-set! n-ix name v)))
+  n-ix)
 
 ;;; 
 ;;; symbol index
@@ -198,21 +288,15 @@ a dictionary.
 
 (require syntax/moddep)
 
-(define (just-label? v)
-  (andmap (lambda (x)
-	    (not (second x))) v))
-
-(define not-just-label? (negate just-label?))
-
 (define (new-ix)
   (make-hasheq))
 
-;; 'sym' is an exported symbol. 'mp' is a symbolic module name.
-;; 'phase' is a phase level. 'kind' is either 'def' (for a value) or
-;; 'form' (for syntax).
+;; 'sym' is an exported symbol. 'mp' is a module name. 'phase' is a
+;; phase level. 'kind' is either 'def' (for a value) or 'form' (for
+;; syntax).
 (define (ix-add ix sym mp phase kind)
-  (unless (or (not phase)
-	      (mp-exclude? mp))
+  ;;(writeln (list 'ix-add sym mp phase kind))
+  (unless (or (not phase) (mp-exclude? mp))
     (define lst (hash-ref ix sym '()))
     (define v (list mp phase kind))
     (unless (member v lst)
@@ -222,28 +306,72 @@ a dictionary.
 (define (ix-syms-list ix)
   (hash-keys ix))
 
-;; Returns a seteq of symbols.
-(define (ix-syms-seteq/non-label ix)
-  (for/seteq (((k v) ix)
-	      #:when (not-just-label? v))
-    k))
+(define (get-exports-and-imports mp)
+  (cond
+   ((mp-primitive? mp)
+    (let-values (((vals stxs) (module->exports mp)))
+      (let ((imports (module->imports mp)))
+	(values vals stxs imports))))
+   ((mp-submod? mp)
+    (values #f #f #f))
+   (else
+    (let ()
+      ;; We need not resolve relative requires, hence #f. Normally
+      ;; yields an actual path, but just a symbol for primitive
+      ;; modules.
+      (define path (resolve-module-path mp #f))
+      
+      ;; Requires actual path as an argument. Hence we cannot get
+      ;; code for primitive modules like this.
+      (define c-exp (get-module-code path))
+      
+      ;; Note that (module->exports ''#%kernel) does work.
+      (let-values (((vals stxs) (module-compiled-exports c-exp)))
+	(let ((imports (module-compiled-imports c-exp)))
+	  (values vals stxs imports)))))))
 
 ;; Returns (values seen syms), see below.
 (define (scan)
-  ;; 'mods' is a list of modules still to examine, by symbolic name.
+  ;; 'mods' is a list of modules still to examine.
   (define mods interesting-modules)
-  ;; 'seen' is a set of modules already seen, by symbolic names.
-  (define seen (seteq))
+  ;; 'seen' is a set of modules already seen.
+  (define seen (set))
   ;; 'syms' is a hash map of exported symbols, with symbols as keys,
   ;; regardless of exporting module or phase level.
   (define syms (new-ix))
 
+  (define (follow-origin mpi name phase)
+    ;;(writeln (list 'origin mpi name phase))
+    (void))
+
+  ;; Do not know what it means for a name to be imported from multiple
+  ;; sources, and then re-exported. Surely there even then is a
+  ;; single, original definition, and it matters not which source to
+  ;; follow.
+  (define (add-original sym mp phase kind origin-lst)
+    (cond
+     ((null? origin-lst)
+      (ix-add syms sym mp phase kind))
+     (else
+      (define origin (car origin-lst))
+      (match origin
+	((? module-path-index? mpi)
+	 ;; Import phase shift is 0, no rename.
+	 (follow-origin mpi sym phase))
+	((list (? module-path-index? mpi)
+	       import-phase-shift ;; (or/c exact-integer? #f)
+	       (? symbol? name)
+	       phase ;; (or/c exact-integer? #f)
+	       )
+	 (follow-origin mpi name phase))))))
+
   ;; 'mp' is a symbolic module name. 'kind' is either 'def' (for a
   ;; value) or 'form' (for syntax).
   (define (add-exports mp kind xs)
-    ;;(pretty-println (list mp kind xs))
+    ;;(pretty-println (list mp kind xs)) (exit)
     (for-each
      (lambda (x)
+       ;;(pretty-println x) (exit)
        (define phase (car x))
        (define lst (cdr x))
        ;;(writeln (list mp kind phase x)) (exit)
@@ -252,7 +380,7 @@ a dictionary.
 	  (define sym (car y))
 	  (define origin-lst (cadr y))
 	  ;;(writeln `(module ,mp kind ,kind phase ,phase symbol ,sym origin ,origin-lst)) (exit)
-	  (ix-add syms sym mp phase kind))
+	  (add-original sym mp phase kind origin-lst))
 	lst))
      xs))
   
@@ -261,45 +389,40 @@ a dictionary.
         (values seen syms)
         (let () ;; for a body context
           (define cur-mp (car mods))
+	  ;;(writeln `(cur-mp ,cur-mp))
+
           (set! mods (cdr mods))
           (when (set-member? seen cur-mp)
             (next))
           (set! seen (set-add seen cur-mp))
 
-          ;; We need not resolve relative requires, hence #f. Always yields
-          ;; an actual path.
-          (define path (resolve-module-path cur-mp #f))
+	  (let-values (((vals stxs imports)
+			(get-exports-and-imports cur-mp)))
+	    (when vals
+	      (unless (mp-exclude? cur-mp)
+		(add-exports cur-mp 'def vals)
+		(add-exports cur-mp 'form stxs))
 
-          ;; Requires actual path as an argument.
-          (define c-exp (get-module-code path))
-
-          (unless (mp-exclude? cur-mp)
-            (let-values (((vals stxs) (module-compiled-exports c-exp)))
-              (add-exports cur-mp 'def vals)
-              (add-exports cur-mp 'form stxs)))
-
-          (let ((imports (module-compiled-imports c-exp)))
-            (for-each
-             (lambda (import)
-               (define phase (car import))
-               (when phase ;; skip label phase
-                 (define mpis (cdr import))
-                 (define n-mods
-                   (filter
-                    (lambda (x)
-                      (and x (not (set-member? seen x))))
-                    (map
-                     (lambda (mpi)
-                       ;; This gives us 'lib' module paths it seems.
-                       (define t-lib-mp (collapse-module-path-index mpi cur-mp))
-                       (define t-sym-mp (mp/lib->symbolic t-lib-mp))
-                       ;; (unless t-sym-mp
-                       ;;   (warn "skipping non-'lib' module path"
-                       ;;           t-lib-mp))
-                       t-sym-mp)
-                     mpis)))
-                 (set! mods (append mods n-mods))))
-             imports))
+	      (for-each
+	       (lambda (import)
+		 (define phase (car import))
+		 (when phase ;; skip label phase
+		   (define mpis (cdr import))
+		   (define n-mods
+		     (filter
+		      (lambda (x)
+			(and x (not (set-member? seen x))))
+		      (map
+		       (lambda (mpi)
+			 ;; This gives us 'lib' module paths it seems,
+			 ;; or (quote #%something) paths.
+			 (define t-lib-mp 
+			   (collapse-module-path-index mpi cur-mp))
+			 ;;(writeln t-lib-mp)
+			 t-lib-mp)
+		       mpis)))
+		   (set! mods (append mods n-mods))))
+	       imports)))
           (next)))))
 
 ;;; 
@@ -365,7 +488,7 @@ a dictionary.
 
 (define (collate-by-module-and-rank lst)
   (sort (collate-by-module lst) > 
-	#:key (lambda (x) (module-rank (car x)))
+	#:key (lambda (x) (mp-rank (car x)))
 	#:cache-keys? #t))
 
 (define (hover-text-from-ix ix-e)
@@ -389,7 +512,7 @@ a dictionary.
   ;;(writeln (list 'text name txt))
   (list name txt))
 
-;; TODO getting signature only for very few names - we probably have to choose the most highly ranked and then look up based on original export
+;; TODO getting signature only for very few names - we probably have to build our symbol index so that we only include the original export - lots of these things come from '#%kernel (exceptionally not a lib form) so must also support that
 (define (hover-text-from-blueboxes files->tag->offset ix-e)
   (define name (first ix-e))
   (define lst (collate-by-module-and-rank (second ix-e)))
@@ -464,36 +587,10 @@ a dictionary.
 
 (require net/url net/url-structs setup/dirs setup/xref scribble/xref)
 
-(define (under? pat s)
-  (and 
-   (regexp-match 
-    (regexp 
-     (string-append "^" 
-		    (regexp-quote pat)
-		    "(?:/|$)")) s)
-   #t))
-
-;; 'mp' is a symbolic module path.
-(define (module-rank mp)
-  (define ms (symbol->string mp))
-  (cond
-   ((eq? mp 'racket/base) 100)
-   ((eq? mp 'racket) 90)
-   ((under? "racket" ms) 80)
-   ((under? "syntax" ms) 70)
-   ((under? "scribble" ms) 50)
-   ((under? "setup" ms) 40)
-   ((under? "net" ms) 30)
-   ((under? "unstable" ms) 20)
-   ((under? "srfi" ms) 10)
-   ((under? "mzscheme" ms) -10)
-   ((under? "mzlib" ms) -20)
-   (else 0)))
-
 (define (module-phase-rank v)
   (define mp (first v))
   (define phase (second v))
-  (+ (module-rank mp)
+  (+ (mp-rank mp)
      (- 9 (abs phase))))
 
 ;; (list/c (listof mp phase kind))
@@ -516,8 +613,7 @@ a dictionary.
 (define (make-url-table-file ix filename)
   (define xref (load-collections-xref))
   (define lst '())
-  (for (((k v) ix)
-	#:when (not-just-label? v))
+  (for (((k v) ix))
     (define best-v (first (rank-vs v)))
     ;;(writeln `(best ,k ,best-v))
     (define mp (first best-v))
