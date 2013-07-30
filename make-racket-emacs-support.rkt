@@ -228,7 +228,16 @@ a dictionary.
     (regexp 
      (string-append "^" 
 		    (regexp-quote pat)
-		    "(?:/|$)")) s)
+		    "(?:/|[.]|$)")) s)
+   #t))
+
+(define (exact? pat s)
+  (and 
+   (regexp-match 
+    (regexp 
+     (string-append "^" 
+		    (regexp-quote pat)
+		    "(?:[.]|$)")) s)
    #t))
 
 (define (mp-rank mp)
@@ -237,21 +246,37 @@ a dictionary.
      (cond
       ((eq? '#%kernel sym) 200)
       ((eq? '#%builtin sym) 190)
-      (else 0)))
+      (else 10)))
     ((list 'lib str)
      (cond
-      ((under? "racket/base" str) 120)
-      ((under? "racket" str) 110)
-      ((under? "syntax" str) 70)
-      ((under? "scribble" str) 50)
-      ((under? "setup" str) 40)
-      ((under? "net" str) 30)
-      ((under? "unstable" str) 20)
-      ((under? "srfi" str) 10)
+      ((string=? "racket/base.rkt" str) 300)
+      ((string=? "racket/main.rkt" str) 290)
+      ((under? "racket/base" str) 100)
+      ((under? "racket" str) 90)
+      ((under? "syntax" str) 80)
+      ((under? "scribble" str) 70)
+      ((under? "setup" str) 60)
+      ((under? "net" str) 50)
+      ((under? "unstable" str) 40)
+      ((under? "srfi" str) 30)
       ((under? "mzscheme" str) -10)
       ((under? "mzlib" str) -20)
       (else 0)))
     (_ -50)))
+
+#;
+(begin
+  (for-each
+   (lambda (mp)
+     (writeln (list mp (mp-rank mp))))
+   '((lib "racket/gui/init.rkt")
+     (lib "racket/gui.rkt")
+     (lib "racket/base.rkt")
+     (lib "racket/main.rkt")
+     (lib "scribble/core.rkt")
+     (lib "deinprogramm/DMdA.rkt")
+     '#%unsafe
+     '#%kernel)))
 
 ;; fetch-strs-for-single-tag returned strings contain odd spaces.
 (define (replace-weird-spaces s)
@@ -479,12 +504,17 @@ a dictionary.
 ;;; 
 
 (define extra-words
-  '(("#t" "boolean literal") 
-    ("#f" "boolean literal") 
+  '(("#hash" "literal start") 
+    ("#hasheq" "literal start") 
+    ("#hasheqv" "literal start") 
     ("#lang" "directive") 
+    ("#px" "literal start") 
+    ("#reader" "directive") 
+    ("#rx" "literal start") 
     ("DEPRECATED" "comment")
     ("FIXME" "comment")
-    ("TODO" "comment")))
+    ("TODO" "comment")
+    ("racket" "module")))
 
 (define (modnames-for-dictionary mods)
   (filter
@@ -524,10 +554,6 @@ a dictionary.
   (define modnames (modnames-for-dictionary mods))
 
   (define help-h (make-hash))
-  (for ((x extra-words))
-    (hash-set! help-h (first x) (second x)))
-  (for ((m modnames))
-    (hash-set! help-h m "module"))
   (for (((k v) ix))
     (define name (symbol->string k))
     (when (> (string-length name) 1)
@@ -538,7 +564,13 @@ a dictionary.
     (define tag-h (make-ranked-tag-index))
     (for (((k v) tag-h))
       ;; Will override any help text already set above.
-      (hash-set! help-h (symbol->string k) v)))
+      (hash-set! help-h (symbol->string k)
+		 (string-join v "\n"))))
+
+  (for ((m modnames))
+    (hash-set! help-h m "module"))
+  (for ((x extra-words))
+    (hash-set! help-h (first x) (second x)))
 
   (define help-lst
     (sort
@@ -553,7 +585,7 @@ a dictionary.
       (path->string (path-replace-suffix name ""))))
   (define (w-f out)
     (displayln ";; generated -- do not edit" out)
-    (displayln "(defvar racket-url-lookup-table '(" out)
+    (displayln "(defvar racket-dictionary-with-help '(" out)
     (for-each (curryr writeln out) help-lst)
     (displayln ") \"public exports in Racket\")" out)
     (displayln (format "(provide '~a)" (el-basename filename)) out)
