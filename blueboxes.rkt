@@ -10,8 +10,7 @@ context help text displayed in DrRacket's "blue box" in the corner.
 (require racket/serialize setup/dirs)
 
 (provide fetch-files->tag->offset 
-	 fetch-strs-for-single-tag
-	 replace-weird-spaces)
+	 fetch-strs-for-single-tag)
 
 ;; from Racket
 ;; Returns: (listof (list file-path int hash[tag -o> (cons int int)]))
@@ -58,10 +57,6 @@ context help text displayed in DrRacket's "blue box" in the corner.
               (for/list ([i (in-range (cdr offset+len))])
                 (read-line port))))))]
       [else #f])))
-
-;; fetch-strs-for-single-tag returned strings contain odd spaces.
-(define (replace-weird-spaces s)
-  (regexp-replace* #rx"\u00A0" s " "))
 
 #|
 
