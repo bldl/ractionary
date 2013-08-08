@@ -4,13 +4,18 @@ default : dict
 
 all : dict hover-dict url-table
 
+TOOL := ./make-racket-support-files.rkt
+
 dict :
-	./make-racket-support-files.rkt --dictionary scheme-mode
+	$(TOOL) --dictionary scheme-mode
 
 hover-dict :
-	./make-racket-support-files.rkt --dictionary racket-exports.el --hover --signatures
+	$(TOOL) --dictionary racket-exports.el --hover --signatures
 	emacs -Q -L . -batch -f batch-byte-compile racket-exports.el
 
 url-table :
-	./make-racket-support-files.rkt --url-table racket-urls.el
+	$(TOOL) --url-table racket-urls.el
 	emacs -Q -L . -batch -f batch-byte-compile racket-urls.el
+
+doc:
+	scribble ++xref-in setup/xref load-collections-xref --redirect-main http://docs.racket-lang.org/ --dest-name README.html README.scrbl

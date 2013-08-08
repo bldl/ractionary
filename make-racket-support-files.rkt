@@ -3,24 +3,6 @@
 
 #|
 
-For a specified set of modules, we record all exports, and examine all
-imports. The indirect dependencies of just about any given module are
-huge (just use show-import-tree to see), and so we want to make sure
-to avoid duplication of work.
-
-module-compiled-imports and module-compiled-exports report all of the
-relevant symbols regardless of phase level shifts. #f corresponds to
-the label phase level, and said phase level is the only one we will
-exclude. module->imports and module->exports provide the same
-information, but the modules must have been declared.
-
-We can tell what is syntax and what is a value. A problem here is that
-because of contracts and such lots more symbols will appear to be
-syntax that are actually defined as macros. This would lead to it
-being confusing to highlight all syntax as keywords. So for now we are
-not concerned with highlighting (let alone indentation), but just want
-a dictionary.
-
 |#
 
 (define writeln
