@@ -688,14 +688,13 @@ a dictionary.
 ;;; main
 ;;; 
 
-(require racket/cmdline)
-
 (define blueboxes? (make-parameter #f))
-(define dictionary-file (make-parameter #f))
 (define hover-help? (make-parameter #f))
-(define url-table-file (make-parameter #f))
 
 (module* main #f
+  (define dictionary-file (make-parameter #f))
+  (define url-table-file (make-parameter #f))
+
   (command-line
    #:once-each
    (("--signatures") "use signatures as Help strings"
