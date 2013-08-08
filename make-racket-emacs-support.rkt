@@ -193,11 +193,20 @@ a dictionary.
   (match mp
     ((list 'quote sym)
      (format "'~a" sym))
-    (_ (symbol->string mp))))
+    (_ (let ((s (symbol->string mp)))
+	 (define r (regexp-match #rx"^(.*)/main$" s))
+	 (if r (second r) s)))))
 
 (define (mp->string mp)
   (define sym (mp/lib->symbolic mp))
   (and sym (mp/symbolic->string sym)))
+
+#;
+(begin
+  (mp->string '(lib "racket/base.rkt"))
+  (mp->string '(lib "racket/main.rkt"))
+  (mp->string '(quote #%kernel))
+  (mp->string ''#%kernel))
 
 (define (mp-exclude? mp)
   (match mp
