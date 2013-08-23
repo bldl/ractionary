@@ -140,6 +140,8 @@
     setup/dirs
     setup/xref
 
+    xml
+    
     net/url
     net/url-structs
     ))

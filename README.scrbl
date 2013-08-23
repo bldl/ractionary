@@ -2,7 +2,9 @@
 
 @(require (for-label racket/base))
 
-@title{Racket Language Dictionary Generator}
+@title{Ractionary}
+@bold{Racket Dictionary Generator}
+
 @author+email["Tero Hasu" "tero at ii.uib.no"]
 
 @section{Introduction}
