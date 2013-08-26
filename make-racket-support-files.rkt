@@ -181,9 +181,16 @@
 	 (define r (regexp-match #rx"^(.*)/main$" s))
 	 (if r (second r) s)))))
 
+;; Output strings are only for display to the user. We do our best to
+;; get a compact module path string, but we even accept malformed
+;; input.
 (define (mp->string mp)
-  (define sym (mp/lib->symbolic mp))
-  (and sym (mp/symbolic->string sym)))
+  (cond
+   ((symbol? mp) (symbol->string mp))
+   ((mp/lib->symbolic mp) => mp/symbolic->string)
+   (else
+    ;;(warn "weird module path" mp)
+    (format "~s" mp))))
 
 #;
 (begin
@@ -281,9 +288,13 @@
    (lambda (x)
      (define h (third x))
      (for (((tag v) h))
+       ;;(writeln tag)
        (match tag
 	 ((list kind (list mp name))
 	  (define ix-k `(,mp ,name))
+	  ;; 'meth' kind does not actually have a module path, but
+	  ;; mp->string is forgiving.
+	  ;;(when (eq? kind 'meth) (writeln tag))
 	  (define n-strs 
 	    (cons
 	     (format "~a in ~a:" kind (mp->string mp))
@@ -510,6 +521,7 @@
     ("racket" "module")))
 
 (define (modnames-for-dictionary mods)
+  ;;(for ((mp mods) #:unless (mp-exclude? mp)) (writeln (list mp (mp->string mp))))
   (filter
    values
    (map
@@ -693,6 +705,7 @@
   (when (or (dictionary-file)
 	    (url-table-file))
     (define-values (mods ix) (scan))
+    ;;(pretty-println mods) (exit)
     ;;(pretty-println ix) (exit)
     (when (dictionary-file)
       (make-dictionary-file mods ix (dictionary-file)))
