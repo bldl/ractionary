@@ -46,7 +46,7 @@ The following files may currently be generated using the included
 
 * `"racket-urls.el"` associates API documentation URLs (for a local
   Racket installation) with symbols, where documentation is available.
-  Again, as above, only the most highly ranked one of each symbol with
+  Again, as above, only the most highly ranked one of each symbol will
   get a URL; the generated URL table can hence be used to implement an
   "I’m feeling lucky" search for the symbols in Racket.
 

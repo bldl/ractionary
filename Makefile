@@ -1,4 +1,4 @@
-default : dict
+default : all
 
 -include local.mk
 

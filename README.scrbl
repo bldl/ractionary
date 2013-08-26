@@ -29,7 +29,7 @@ The following files may currently be generated using the included @filepath{Make
 
 @item{@filepath{racket-exports.el} is like the above, but also includes a "Help" text for each symbol, where available. (Where not available, a machine generated Help text is still included, basically just naming the modules that export the symbol.) For a given symbol there may be multiple possible definitions, in which case documented identifiers are preferred. Where the same symbol has multiple documented definitions, these are ranked according to the "importance" of the module name, and the highest ranked one is picked. For example, @racketidfont{car} in @racketmodname[r5rs] or @racketmodname[srfi/1] probably should not be considered as important as the @racket[car] in Racket proper.}
 
-@item{@filepath{racket-urls.el} associates API documentation URLs (for a local Racket installation) with symbols, where documentation is available. Again, as above, only the most highly ranked one of each symbol with get a URL; the generated URL table can hence be used to implement an "I'm feeling lucky" search for the symbols in Racket.}
+@item{@filepath{racket-urls.el} associates API documentation URLs (for a local Racket installation) with symbols, where documentation is available. Again, as above, only the most highly ranked one of each symbol will get a URL; the generated URL table can hence be used to implement an "I'm feeling lucky" search for the symbols in Racket.}
 
 ]
 
