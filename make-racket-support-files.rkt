@@ -261,6 +261,7 @@
       ((under? "srfi" str) 30)
       ((under? "mzscheme" str) -10)
       ((under? "mzlib" str) -20)
+      ((under? "deinprogramm" str) -30)
       (else 0)))
     (_ -50)))
 
