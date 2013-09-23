@@ -3,3 +3,9 @@
 .\#*
 *.swp
 .DS_Store
+*.el
+*.elc
+scheme-mode
+*.js
+*.css
+README.html
