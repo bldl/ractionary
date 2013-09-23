@@ -39,7 +39,7 @@ The @filepath{racket-exports.el} dictionary includes associated, brief "Help" do
 
 @section{Missing Features}
 
-We would probably also want to generate a table of symbols naming Racket syntactic forms, i.e. macros. This could then easily be used for syntax highlighting, e.g. with @code{font-lock-add-keywords} in Emacs. Indeed, we can tell which export is syntax and which is a value. Alas, because of contracts and such lots more symbols will appear to be syntax that are actually programmer defined as macros. This would lead to it being confusing to highlight all syntax as keywords. So for now we are not concerned with highlighting.
+We would probably also want to generate a table of symbols naming Racket syntactic forms, i.e. macros. This could then easily be used for syntax highlighting, e.g. with @code{font-lock-add-keywords} in Emacs. Indeed, we can tell which export is syntax and which is a value. Alas, because of contracts and such lots more symbols will appear to be syntax than are actually programmer defined as macros. This would lead to it being confusing to highlight all syntax as keywords. So for now we are not concerned with highlighting.
 
 @section{License}
 

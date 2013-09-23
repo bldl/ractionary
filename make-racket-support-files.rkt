@@ -135,12 +135,20 @@
     syntax/toplevel  
     syntax/trusted-xforms
 
+    scribble/manual
     scribble/xref
 
     setup/dirs
     setup/xref
 
     xml
+
+    json
+
+    data/order
+    data/queue
+    data/skip-list
+    data/splay-tree
     
     net/url
     net/url-structs
