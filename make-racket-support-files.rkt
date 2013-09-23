@@ -5,15 +5,7 @@
 
 |#
 
-(define writeln
-  (case-lambda
-    ((datum) (begin (write datum) (newline)))
-    ((datum out) (begin (write datum out) (newline out)))))
-
-(define pretty-println
-  (case-lambda
-    ((datum) (begin (pretty-print datum) (newline)))
-    ((datum out) (begin (pretty-print datum out) (newline out)))))
+(require "util.rkt")
 
 (define (warn msg datum)
   (printf "WARNING: ~a: ~s~n" msg datum))
