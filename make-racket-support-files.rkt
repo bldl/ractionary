@@ -610,60 +610,22 @@
 ;;; URL lookup file generation
 ;;; 
 
-(require setup/dirs setup/xref scribble/xref)
-
 (define (module-phase-rank v)
   (define mp (first v))
   (define phase (second v))
   (+ (mp-rank mp)
      (- 9 (abs phase))))
 
-;; (list/c (listof mp phase kind))
-(define (rank-vs vs)
+;; (listof (list/c mp phase kind))
+(define (sort-ix-vs-by-rank vs)
   ;;(writeln (map (lambda (x) (cons (module-phase-rank x) x)) vs)) (exit)
   (sort vs > #:key module-phase-rank #:cache-keys? #t))
 
-(define (build-url-table ix)
-  (define xref (load-collections-xref))
-  (define lst '())
-  (for (((k v) ix))
-    (define best-v (first (rank-vs v)))
-    ;;(writeln `(best ,k ,best-v))
-    (define mp (first best-v))
-    (define phase (second best-v))
-    (define tag (xref-binding->definition-tag 
-		 xref 
-		 (list mp k) phase))
-    (when tag
-      (define-values (path anchor)
-	(xref-tag->path+anchor xref tag))
-      (when path
-	;; 'anchor' may be #f.
-	(set! lst (cons 
-		   (list k (path+anchor->url-string path anchor)) 
-		   lst)))))
-  (set! lst
-	(sort lst string<?
-	      #:key (lambda (x)
-		      (symbol->string (car x)))))
-  lst)
+(define (pick-ix-vs-by-rank vs)
+  (first (sort-ix-vs-by-rank vs)))
 
-(define (write-url-table lst out)
-  (writeln `(defvar racket-doc-dir ,(path->string (find-doc-dir))
-              "Racket installation's 'doc' directory") out)
-  (displayln "(defvar racket-url-lookup-table '(" out)
-  (for-each 
-   (lambda (x)
-     (display "(" out)
-     (display (elisp-escape-symbol (first x)) out)
-     (display " " out)
-     (write (second x) out)
-     (displayln ")" out))
-   lst)
-  (displayln ") \"API doc URLs for Racket symbols\")" out))
-  
 (define (make-url-table-file ix filename)
-  (define lst (build-url-table ix))
+  (define lst (build-url-table ix pick-ix-vs-by-rank))
   (call-with-output-file* 
    filename 
    (lambda (out)
