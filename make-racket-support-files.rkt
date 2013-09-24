@@ -5,7 +5,7 @@
 
 |#
 
-(require "util.rkt")
+(require "main.rkt" "util.rkt")
 
 (define (warn msg datum)
   (printf "WARNING: ~a: ~s~n" msg datum))
@@ -610,7 +610,7 @@
 ;;; URL lookup file generation
 ;;; 
 
-(require net/url net/url-structs setup/dirs setup/xref scribble/xref)
+(require setup/dirs setup/xref scribble/xref)
 
 (define (module-phase-rank v)
   (define mp (first v))
@@ -623,19 +623,7 @@
   ;;(writeln (map (lambda (x) (cons (module-phase-rank x) x)) vs)) (exit)
   (sort vs > #:key module-phase-rank #:cache-keys? #t))
 
-(define (path+anchor->url-string path anchor)
-  (define url
-    (url->string
-     (path->url path)))
-  (when anchor
-    (set! url (string-append url "#" anchor)))
-  url)
-
-(define (elisp-escape-symbol s)
-  (set! s (symbol->string s))
-  (regexp-replace* #rx"([^a-zA-Z0-9+=*/_~!@$%^&:<>{}?-])" s "\\\\\\1"))
-
-(define (make-url-table-file ix filename)
+(define (build-url-table ix)
   (define xref (load-collections-xref))
   (define lst '())
   (for (((k v) ix))
@@ -658,27 +646,30 @@
 	(sort lst string<?
 	      #:key (lambda (x)
 		      (symbol->string (car x)))))
+  lst)
 
+(define (write-url-table lst out)
+  (writeln `(defvar racket-doc-dir ,(path->string (find-doc-dir))
+              "Racket installation's 'doc' directory") out)
+  (displayln "(defvar racket-url-lookup-table '(" out)
+  (for-each 
+   (lambda (x)
+     (display "(" out)
+     (display (elisp-escape-symbol (first x)) out)
+     (display " " out)
+     (write (second x) out)
+     (displayln ")" out))
+   lst)
+  (displayln ") \"API doc URLs for Racket symbols\")" out))
+  
+(define (make-url-table-file ix filename)
+  (define lst (build-url-table ix))
   (call-with-output-file* 
    filename 
    (lambda (out)
      (displayln ";; generated -- do not edit" out)
-
-     (writeln `(defvar racket-doc-dir ,(path->string (find-doc-dir))
-		 "Racket installation's 'doc' directory") out)
-
-     (displayln "(defvar racket-url-lookup-table '(" out)
-     (for-each 
-      (lambda (x)
-	(display "(" out)
-	(display (elisp-escape-symbol (first x)) out)
-	(display " " out)
-	(write (second x) out)
-	(displayln ")" out))
-      lst)
-     (displayln ") \"API doc URLs for Racket symbols\")" out))
+     (write-url-table lst out))
    #:exists 'truncate/replace)
-
   (void))
 
 ;;; 
