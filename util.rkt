@@ -58,6 +58,23 @@
     (provide (all-from-out spec) ...)))
 
 ;;; 
+;;; binding conveniences
+;;; 
+
+(define-syntax* if-let
+  (syntax-rules ()
+    ((_ n c t e)
+     (let ((n c))
+       (if n t e)))))
+
+(define-syntax* let-and
+  (syntax-rules ()
+    ((_ e) e)
+    ((_ n v more ...)
+     (let ((n v))
+       (and n (let-and more ...))))))
+
+;;; 
 ;;; printing conveniences
 ;;; 
 

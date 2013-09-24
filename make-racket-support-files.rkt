@@ -173,32 +173,6 @@
   (mp/lib->symbolic '(quote #%kernel))
   (mp/lib->symbolic ''#%kernel))
 
-(define (mp/symbolic->string mp)
-  (match mp
-    ((list 'quote sym)
-     (format "'~a" sym))
-    (_ (let ((s (symbol->string mp)))
-	 (define r (regexp-match #rx"^(.*)/main$" s))
-	 (if r (second r) s)))))
-
-;; Output strings are only for display to the user. We do our best to
-;; get a compact module path string, but we even accept malformed
-;; input.
-(define (mp->string mp)
-  (cond
-   ((symbol? mp) (symbol->string mp))
-   ((mp/lib->symbolic mp) => mp/symbolic->string)
-   (else
-    ;;(warn "weird module path" mp)
-    (format "~s" mp))))
-
-#;
-(begin
-  (mp->string '(lib "racket/base.rkt"))
-  (mp->string '(lib "racket/main.rkt"))
-  (mp->string '(quote #%kernel))
-  (mp->string ''#%kernel))
-
 (define (mp-exclude? mp)
   (match mp
     ((list 'lib s)
@@ -259,6 +233,7 @@
       ((under? "net" str) 50)
       ((under? "unstable" str) 40)
       ((under? "srfi" str) 30)
+      ((under? "lazy" str) -5)
       ((under? "mzscheme" str) -10)
       ((under? "mzlib" str) -20)
       ((under? "deinprogramm" str) -30)
@@ -278,10 +253,6 @@
      (lib "deinprogramm/DMdA.rkt")
      '#%unsafe
      '#%kernel)))
-
-;; fetch-strs-for-single-tag returned strings contain odd spaces.
-(define (replace-weird-spaces s)
-  (regexp-replace* #rx"\u00A0" s " "))
 
 (define (build-tag-index files->tag->offset)
   (define ix (make-hash))
