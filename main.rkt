@@ -23,7 +23,7 @@
 ;;; xref
 ;;;
 
-(require net/url scribble/xref setup/dirs setup/xref)
+(require net/url scribble/xref setup/xref)
 
 (define* (path+anchor->url-string path anchor)
   (define url
@@ -59,9 +59,8 @@
 		      (symbol->string (car x)))))
   lst)
 
-(define* (write-url-table lst out)
-  (writeln `(defvar racket-doc-dir ,(path->string (find-doc-dir))
-              "Racket installation's 'doc' directory") out)
+;; 'lst' is (listof (list/c sym url-string)).
+(define* (write-url-table/defvar lst out)
   (displayln "(defvar racket-url-lookup-table '(" out)
   (for-each 
    (lambda (x)

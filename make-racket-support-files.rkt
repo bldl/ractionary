@@ -610,6 +610,8 @@
 ;;; URL lookup file generation
 ;;; 
 
+(require setup/dirs) ;; find-doc-dir
+
 (define (module-phase-rank v)
   (define mp (first v))
   (define phase (second v))
@@ -630,7 +632,9 @@
    filename 
    (lambda (out)
      (displayln ";; generated -- do not edit" out)
-     (write-url-table lst out))
+     (writeln `(defvar racket-doc-dir ,(path->string (find-doc-dir))
+                 "Racket installation's 'doc' directory") out)
+     (write-url-table/defvar lst out))
    #:exists 'truncate/replace)
   (void))
 
