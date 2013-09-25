@@ -39,6 +39,17 @@
        (define-syntax-rule (name rest ...) body)
        (provide name)))))
 
+(define-syntax* define-with-contract*
+  (syntax-rules ()
+    ((_ contract (name . rest) body ...)
+     (begin
+       (define (name . rest) body ...)
+       (provide/contract [name contract])))
+    ((_ contract name value)
+     (begin
+       (define name value)
+       (provide/contract [name contract])))))
+
 (define-syntax-rule*
   (concrete-struct* nm rest ...)
   (begin
