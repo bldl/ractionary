@@ -149,7 +149,14 @@
 (define* (replace-weird-spaces s)
   (regexp-replace* #rx"\u00A0" s " "))
 
-(define* (build-tag-index [files->tag->offset (fetch-files->tag->offset)])
+(define* (build-tag-index
+          #:offsets [files->tag->offset #f]
+          #:search-dirs [search-dirs #f])
+  (unless files->tag->offset
+    (set! files->tag->offset
+          (if search-dirs
+              (fetch-files->tag->offset #:search-dirs search-dirs)
+              (fetch-files->tag->offset))))
   (define ix (make-hash))
   (for-each
    (lambda (x)
