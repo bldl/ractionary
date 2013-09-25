@@ -12,7 +12,7 @@ context help text displayed in DrRacket's "blue box" in the corner.
 (provide fetch-files->tag->offset 
 	 fetch-strs-for-single-tag)
 
-;; from Racket
+;; from Racket, slightly modified
 ;; Returns: (listof (list file-path int hash[tag -o> (cons int int)]))
 ;; where the hash looks something like
 ;; #hash(((def ((lib "racklog/main.rkt") %not)) . ((1358 . 3)))
@@ -20,10 +20,11 @@ context help text displayed in DrRacket's "blue box" in the corner.
 ;;       ((def ((lib "racklog/main.rkt") %append)) . ((2433 . 5)))
 ;;       ((form ((lib "racklog/main.rkt") %assert!)) . ((863 . 5)))
 ;;       ...)
-(define (fetch-files->tag->offset)
+(define (fetch-files->tag->offset
+         #:search-dirs [search-dirs (get-doc-search-dirs)])
   (filter
    values
-   (for*/list ([doc-search-dir (in-list (get-doc-search-dirs))]
+   (for*/list ([doc-search-dir (in-list search-dirs)]
                [doc-dir-name (in-list (if (directory-exists? doc-search-dir)
                                           (directory-list doc-search-dir)
                                           '()))])
