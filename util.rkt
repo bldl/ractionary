@@ -66,7 +66,7 @@
   (require* spec ...)
   (begin
     (require spec ...)
-    (provide (all-from-out spec) ...)))
+    (provide (all-from-out spec ...))))
 
 ;;; 
 ;;; binding conveniences

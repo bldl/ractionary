@@ -116,7 +116,8 @@
     syntax/parse  
     syntax/parse/debug  
     syntax/parse/define  
-    syntax/path-spec  
+    syntax/path-spec
+    syntax/quote
     syntax/readerr  
     syntax/srcloc  
     syntax/strip-context  
@@ -127,23 +128,28 @@
     syntax/toplevel  
     syntax/trusted-xforms
 
+    pict
     scribble/manual
     scribble/xref
 
     setup/dirs
     setup/xref
 
-    xml
-
-    json
-
     data/order
     data/queue
     data/skip-list
     data/splay-tree
+
+    rackunit
     
+    xml
+
+    json
+
     net/url
     net/url-structs
+
+    unstable/error
     ))
 
 (define (mp-primitive? mp)
