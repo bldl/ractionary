@@ -39,6 +39,10 @@ context help text displayed in DrRacket's "blue box" in the corner.
                     (+ (string->number first-line) pos)
                     (deserialize (read port)))))))))
 
+(module+ test
+  (pretty-print
+   (fetch-files->tag->offset)))
+
 ;; from Racket, slightly modified
 ;; a tag looks like (form ((lib "racklog/main.rkt") %free-vars))
 (define (fetch-strs-for-single-tag files->tag->offset tag)

@@ -14,7 +14,7 @@ hover-dict :
 	emacs -Q -L . -batch -f batch-byte-compile racket-exports.el
 
 url-table :
-	$(TOOL) --url-table racket-urls.el
+	./ractionary-make-urls.rkt --url-table racket-urls.el
 	emacs -Q -L . -batch -f batch-byte-compile racket-urls.el
 
 doc : html-doc markdown-doc
