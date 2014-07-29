@@ -9,3 +9,6 @@ scheme-mode
 *.js
 *.css
 README.html
+compiled/
+retired/
+local.mk

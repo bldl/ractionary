@@ -39,6 +39,13 @@
        (define-syntax-rule (name rest ...) body)
        (provide name)))))
 
+(define-syntax* define-with-contract
+  (syntax-rules ()
+    ((_ contract (name . rest) body ...)
+     (define (name . rest) body ...))
+    ((_ contract name value)
+     (define name value))))
+
 (define-syntax* define-with-contract*
   (syntax-rules ()
     ((_ contract (name . rest) body ...)
@@ -55,6 +62,10 @@
   (begin
     (struct nm rest ...)
     (provide (struct-out nm))))
+
+(define-syntax-rule*
+  (abstract-struct nm rest ...)
+  (struct nm rest ... #:constructor-name ctor))
 
 (define-syntax-rule*
   (abstract-struct* nm rest ...)
@@ -99,13 +110,26 @@
     ((datum) (begin (write datum) (newline)))
     ((datum out) (begin (write datum out) (newline out)))))
 
-(define* pretty-println
-  (case-lambda
-    ((datum) (begin (pretty-print datum) (newline)))
-    ((datum out) (begin (pretty-print datum out) (newline out)))))
-
 (define* (printfln . args)
   (apply printf args) (newline))
+
+;;; 
+;;; IO conveniences
+;;; 
+
+(define* (write-output filename w-f)
+  (if filename
+      (call-with-output-file* 
+       filename w-f
+       #:exists 'truncate/replace)
+      (w-f (current-output-port))))
+
+;;; 
+;;; matching conveniences
+;;; 
+
+(define-syntax-rule* (matches? e pat ...)
+  (match e (pat #t) ... (_ #f)))
 
 #|
 

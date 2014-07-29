@@ -10,30 +10,9 @@ first (supposedly "best") choice.
 
 |#
 
-(require data/order setup/xref 
-         "blueboxes.rkt" "main.rkt" "util.rkt")
-
-;;; 
-;;; module path sorting
-;;; 
-
-(define reverse-number-order
-  (order 'number-order number? = >))
-
-(define mp-order
-  (let ((num-cmp (order-comparator reverse-number-order))
-        (datum-cmp (order-comparator datum-order)))
-    (order 'mp-order 
-           any/c
-           (lambda (x y)
-             (define x-rank (mp-rank x))
-             (define y-rank (mp-rank y))
-             (define rank-r (num-cmp x-rank y-rank))
-             (if (not (eq? '= rank-r))
-                 rank-r
-                 (datum-cmp x y))))))
-
-(define mp<? (order-<? mp-order))
+(require setup/xref 
+         "racket-blueboxes.rkt" "elisp.rkt" "module-path.rkt"
+         "ranking.rkt" "util.rkt" "xref.rkt")
 
 ;;; 
 ;;; symbol index
@@ -110,14 +89,13 @@ first (supposedly "best") choice.
           symbol<? 
           #:key car))
   
-  (call-with-output-file* 
-   filename 
-   (lambda (out)
-     (displayln ";; generated -- do not edit" out)
-     (writeln `(defvar racket-doc-dir ,(path->string (find-doc-dir))
-                 "Racket installation's 'doc' directory") out)
-     (write-url-table lst out))
-   #:exists 'truncate/replace)
+  (define (w-f out)
+    (displayln ";; generated -- do not edit" out)
+    (writeln `(defvar racket-doc-dir ,(path->string (find-doc-dir))
+               "Racket installation's 'doc' directory") out)
+    (write-url-table lst out))
+
+  (write-output filename w-f)
   (void))
 
 ;;; 
@@ -128,12 +106,14 @@ first (supposedly "best") choice.
   (make-url-table-file "/tmp/urls.el"))
 
 (module* main #f
+  (define gen? #f)
   (define url-table-file (make-parameter #f))
 
   (command-line
    #:once-each
-   (("-u" "--url-table") filename "write URL lookup table"
-    (url-table-file filename))
-   )
-  (when (url-table-file)
+   [("-u" "--url-table") "generate an URL lookup table"
+    (set! gen? #t)]
+   [("-o" "--output") filename "write to a file"
+    (url-table-file filename)])
+  (when gen?
     (make-url-table-file (url-table-file))))

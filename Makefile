@@ -1,21 +1,25 @@
-default : all
+default : setup
 
 -include local.mk
 
+setup :
+	raco setup ractionary
+
 all : dict hover-dict url-table
 
-TOOL := ./make-racket-support-files.rkt
-
 dict :
-	$(TOOL) --dictionary scheme-mode
+	./ractionary-make-dict.rkt --dictionary --output racket-mode
 
 hover-dict :
-	$(TOOL) --dictionary racket-exports.el --hover --signatures
+	./ractionary-make-dict.rkt --dictionary --output racket-exports.el --hover
 	emacs -Q -L . -batch -f batch-byte-compile racket-exports.el
 
 url-table :
-	./ractionary-make-urls.rkt --url-table racket-urls.el
+	./ractionary-make-urls.rkt --url-table --output racket-urls.el
 	emacs -Q -L . -batch -f batch-byte-compile racket-urls.el
+
+clean :
+	find -name compiled -type d -print0 | xargs -0 --no-run-if-empty rm -r
 
 doc : html-doc markdown-doc
 
