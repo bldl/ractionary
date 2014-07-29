@@ -1,84 +1,62 @@
-Ractionary
+# Ractionary
 
 **Racket Dictionary Generator**
 
 Tero Hasu <[tero at ii.uib.no](mailto:tero at ii.uib.no)>
 
-# 1. Introduction
+## 1. Introduction
 
 This is a tool for generating dictionaries for Racket language aware
 tools support. The generation is done based on information available
-through Racket’s own facilities, including: `module-compiled-exports`
-and `module-compiled-imports` (and `module->exports` and
-`module->imports`); `scribble/xref` provided documentation
-cross-reference information; and DrRacket "blue boxes" data (see
-`scribble/contract-render`).
-
-The tool does not cover all the modules that ship with Racket; if your
-favorite is missing, you may want to try editing the value of
-`interesting-modules` in the `"make-racket-support-files.rkt"` script.
+through Racket’s own facilities, including: `scribble/xref` provided
+documentation cross-reference information; and DrRacket "blue boxes"
+data (see `scribble/contract-render`).
 
 Currently the focus is on Emacs support. One of the generated dictionary
 files is just a plain list of words, whereas the others contain Emacs
 Lisp declarations.
 
-# 2. Supported Dictionaries
+## 2. Supported Dictionaries
 
-The following files may currently be generated using the included
-`"Makefile"`:
+The following files may currently be generated using as shown in the
+included `"Makefile"`:
 
-* `"scheme-mode"` is suitable for use as a drop-in Emacs Auto Complete
+* `"racket-mode"` is suitable for use as a drop-in Emacs Auto Complete
   Mode dictionary, for example, without any specific Emacs configuration
   required. It is just a list of symbols without any additional
   information, and could potentially be used for auto completion in
   other editors as well.
 
 * `"racket-exports.el"` is like the above, but also includes a "Help"
-  text for each symbol, where available. (Where not available, a machine
-  generated Help text is still included, basically just naming the
-  modules that export the symbol.) For a given symbol there may be
-  multiple possible definitions, in which case documented identifiers
-  are preferred. Where the same symbol has multiple documented
-  definitions, these are ranked according to the "importance" of the
-  module name, and the highest ranked one is picked. For example, `car`
-  in `r5rs` or `srfi/1` probably should not be considered as important
-  as the `car` in Racket proper.
+  text for each symbol. For a given symbol there may be multiple
+  possible definitions; these are ranked according to the "importance"
+  of the module name, and the highest ranked one is picked. For example,
+  `car` in `r5rs` or `srfi/1` probably should not be considered as
+  important as the `car` in Racket proper.
 
 * `"racket-urls.el"` associates API documentation URLs (for a local
-  Racket installation) with symbols, where documentation is available.
-  Again, as above, only the most highly ranked one of each symbol will
-  get a URL; the generated URL table can hence be used to implement an
-  "I’m feeling lucky" search for the symbols in Racket.
+  Racket installation) with symbols. Where the same symbol has multiple
+  documented definitions, each of them will get a URL. The generated URL
+  table can hence be used either to implement an "I’m feeling lucky"
+  search for the symbols in Racket, or a set of choices can be presented
+  to the user.
 
-# 3. Bugs
-
-The `"racket-exports.el"` dictionary includes associated, brief "Help"
-documentation with each symbol. The documentation names a module
-exporting the symbol, but many symbols are exported (or re-exported)
-from multiple modules; only one of these is included in the Help text,
-and it is not always the most appropriate choice. For example, for
-symbol `car` the module `racket/base` is probably a more appropriate and
-future-proof choice than `'#%kernel`. `module-compiled-exports` and
-`module->exports` do return origin information for exported symbols, and
-it would probably be possible to use this information to find the "best"
-module exporting a given symbol.
-
-# 4. Missing Features
+## 3. Missing Features
 
 We would probably also want to generate a table of symbols naming Racket
 syntactic forms, i.e. macros. This could then easily be used for syntax
 highlighting, e.g. with `font-lock-add-keywords` in Emacs. Indeed, we
 can tell which export is syntax and which is a value. Alas, because of
-contracts and such lots more symbols will appear to be syntax that are
+contracts and such lots more symbols will appear to be syntax than are
 actually programmer defined as macros. This would lead to it being
 confusing to highlight all syntax as keywords. So for now we are not
 concerned with highlighting.
 
-# 5. License
+## 4. License
 
 Except where otherwise noted, the following license applies:
 
-Copyright (C) 2013 University of Bergen and the authors.
+Copyright (C) 2013-2014 University of Bergen and the authors.
 
 Authors: Tero Hasu
 
@@ -101,8 +79,16 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-# 6. See Also
+## 5. See Also
 
 * a [blog post](http://terohasu.net/blog/2013-08-24-ractionary.html)
   describing one way to set up Emacs to use the generated dictionary
-  files
+  files (somewhat out of date wrt this development version)
+
+* [racket-mode](https://github.com/greghendershott/racket-mode) for
+  Emacs, which also now supports completion, of a dynamic and context
+  sensitive kind – it should be possible to use both: a static
+  dictionary for faster completion as you type, but setting up a trigger
+  to escape to context-sensitive completion (possibly by calling
+  `ac-stop`, then `completion-at-point`) where the fixed dictionary does
+  not have the desired symbol

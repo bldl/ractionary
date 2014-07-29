@@ -10,32 +10,24 @@
 @section{Introduction}
 
 This is a tool for generating dictionaries for Racket language aware tools support. The generation is done based on information available through Racket's own facilities, including: 
-@racket[module-compiled-exports] and @racket[module-compiled-imports]
-(and @racket[module->exports] and @racket[module->imports]);
 @racketmodname[scribble/xref] provided documentation cross-reference information;
 and DrRacket "blue boxes" data (see @racketmodname[scribble/contract-render]).
-
-The tool does not cover all the modules that ship with Racket; if your favorite is missing, you may want to try editing the value of @racketidfont{interesting-modules} in the @filepath{make-racket-support-files.rkt} script.
 
 Currently the focus is on Emacs support. One of the generated dictionary files is just a plain list of words, whereas the others contain Emacs Lisp declarations.
 
 @section{Supported Dictionaries}
 
-The following files may currently be generated using the included @filepath{Makefile}:
+The following files may currently be generated using as shown in the included @filepath{Makefile}:
 
 @itemlist[
 
-@item{@filepath{scheme-mode} is suitable for use as a drop-in Emacs Auto Complete Mode dictionary, for example, without any specific Emacs configuration required. It is just a list of symbols without any additional information, and could potentially be used for auto completion in other editors as well.}
+@item{@filepath{racket-mode} is suitable for use as a drop-in Emacs Auto Complete Mode dictionary, for example, without any specific Emacs configuration required. It is just a list of symbols without any additional information, and could potentially be used for auto completion in other editors as well.}
 
-@item{@filepath{racket-exports.el} is like the above, but also includes a "Help" text for each symbol, where available. (Where not available, a machine generated Help text is still included, basically just naming the modules that export the symbol.) For a given symbol there may be multiple possible definitions, in which case documented identifiers are preferred. Where the same symbol has multiple documented definitions, these are ranked according to the "importance" of the module name, and the highest ranked one is picked. For example, @racketidfont{car} in @racketmodname[r5rs] or @racketmodname[srfi/1] probably should not be considered as important as the @racket[car] in Racket proper.}
+@item{@filepath{racket-exports.el} is like the above, but also includes a "Help" text for each symbol. For a given symbol there may be multiple possible definitions; these are ranked according to the "importance" of the module name, and the highest ranked one is picked. For example, @racketidfont{car} in @racketmodname[r5rs] or @racketmodname[srfi/1] probably should not be considered as important as the @racket[car] in Racket proper.}
 
-@item{@filepath{racket-urls.el} associates API documentation URLs (for a local Racket installation) with symbols, where documentation is available. Again, as above, only the most highly ranked one of each symbol will get a URL; the generated URL table can hence be used to implement an "I'm feeling lucky" search for the symbols in Racket.}
+@item{@filepath{racket-urls.el} associates API documentation URLs (for a local Racket installation) with symbols. Where the same symbol has multiple documented definitions, each of them will get a URL. The generated URL table can hence be used either to implement an "I'm feeling lucky" search for the symbols in Racket, or a set of choices can be presented to the user.}
 
 ]
-
-@section{Bugs}
-
-The @filepath{racket-exports.el} dictionary includes associated, brief "Help" documentation with each symbol. The documentation names a module exporting the symbol, but many symbols are exported (or re-exported) from multiple modules; only one of these is included in the Help text, and it is not always the most appropriate choice. For example, for symbol @racket[car] the module @racketmodname[racket/base] is probably a more appropriate and future-proof choice than @racketmodname['#%kernel]. @racket[module-compiled-exports] and @racket[module->exports] do return origin information for exported symbols, and it would probably be possible to use this information to find the "best" module exporting a given symbol.
 
 @section{Missing Features}
 
@@ -45,7 +37,7 @@ We would probably also want to generate a table of symbols naming Racket syntact
 
 Except where otherwise noted, the following license applies:
 
-Copyright (C) 2013 University of Bergen and the authors.
+Copyright (C) 2013-2014 University of Bergen and the authors.
 
 Authors: Tero Hasu
 
@@ -73,6 +65,8 @@ SOFTWARE.
 
 @itemlist[
 
-@item{a @link["http://terohasu.net/blog/2013-08-24-ractionary.html"]{blog post} describing one way to set up Emacs to use the generated dictionary files}
+@item{a @link["http://terohasu.net/blog/2013-08-24-ractionary.html"]{blog post} describing one way to set up Emacs to use the generated dictionary files (somewhat out of date wrt this development version)}
+
+@item{@link["https://github.com/greghendershott/racket-mode"]{racket-mode} for Emacs, which also now supports completion, of a dynamic and context sensitive kind -- it should be possible to use both: a static dictionary for faster completion as you type, but setting up a trigger to escape to context-sensitive completion (possibly by calling @code{ac-stop}, then @code{completion-at-point}) where the fixed dictionary does not have the desired symbol}
 
 ]

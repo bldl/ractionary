@@ -37,7 +37,9 @@
    [(and (BlueWord? x) (BlueWord? y))
     (define x-mp (BlueWord-mp x))
     (define y-mp (BlueWord-mp y))
-    (if (mp<? x-mp y-mp) y x)]
+    (define x-lower? (mp<? x-mp y-mp))
+    ;;(writeln (list (string->symbol x-w) 'CMP x-mp y-mp x-lower?))
+    (if x-lower? x y)]
    [else
     (raise-arguments-error
      'word+
@@ -133,6 +135,7 @@
          (record-mp! mp)
          (define loc (format "~a in ~a:" kind (mp->string mp)))
          (define help (mk-help loc tag))
+         ;;(writeln (list sym mp (mp-rank mp)))
          (put! (BlueWord (symbol->string sym) mp help))]
         [(list 'meth (list (list mp (? symbol? cls)) (? symbol? sym)))
          (record-mp! mp)
