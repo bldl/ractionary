@@ -5,9 +5,7 @@
 .DS_Store
 *.el
 *.elc
-scheme-mode
-*.js
-*.css
+racket-mode
 README.html
 compiled/
 retired/
