@@ -37,7 +37,7 @@ We would probably also want to generate a table of symbols naming Racket syntact
 
 Except where otherwise noted, the following license applies:
 
-Copyright (C) 2013-2014 University of Bergen and the authors.
+Copyright (C) 2013-2015 University of Bergen and the authors.
 
 Authors: Tero Hasu
 
@@ -65,8 +65,8 @@ SOFTWARE.
 
 @itemlist[
 
-@item{a @link["http://terohasu.net/blog/2013-08-24-ractionary.html"]{blog post} describing one way to set up Emacs to use the generated dictionary files (somewhat out of date wrt this development version)}
+@item{a @link["http://terohasu.net/blog/2013-08-24-ractionary.html"]{blog post} describing one way to set up Emacs to use the generated dictionary files (somewhat out of date wrt this version)}
 
-@item{@link["https://github.com/greghendershott/racket-mode"]{racket-mode} for Emacs, which also now supports completion, of a dynamic and context sensitive kind -- it should be possible to use both: a static dictionary for faster completion as you type, but setting up a trigger to escape to context-sensitive completion (possibly by calling @code{ac-stop}, then @code{completion-at-point}) where the fixed dictionary does not have the desired symbol}
+@item{@link["https://github.com/greghendershott/racket-mode"]{racket-mode} for Emacs, which also now supports completion, of a dynamic and context sensitive kind---it should be possible to use both: a static dictionary for faster completion as you type, but setting up a trigger to escape to context-sensitive completion (possibly by calling @code{ac-stop}, then @code{completion-at-point}) where the fixed dictionary does not have the desired symbol}
 
 ]

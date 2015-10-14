@@ -56,7 +56,7 @@ concerned with highlighting.
 
 Except where otherwise noted, the following license applies:
 
-Copyright (C) 2013-2014 University of Bergen and the authors.
+Copyright (C) 2013-2015 University of Bergen and the authors.
 
 Authors: Tero Hasu
 
@@ -83,12 +83,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 * a [blog post](http://terohasu.net/blog/2013-08-24-ractionary.html)
   describing one way to set up Emacs to use the generated dictionary
-  files (somewhat out of date wrt this development version)
+  files (somewhat out of date wrt this version)
 
 * [racket-mode](https://github.com/greghendershott/racket-mode) for
   Emacs, which also now supports completion, of a dynamic and context
-  sensitive kind – it should be possible to use both: a static
-  dictionary for faster completion as you type, but setting up a trigger
-  to escape to context-sensitive completion (possibly by calling
-  `ac-stop`, then `completion-at-point`) where the fixed dictionary does
-  not have the desired symbol
+  sensitive kind—it should be possible to use both: a static dictionary
+  for faster completion as you type, but setting up a trigger to escape
+  to context-sensitive completion (possibly by calling `ac-stop`, then
+  `completion-at-point`) where the fixed dictionary does not have the
+  desired symbol

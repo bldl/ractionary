@@ -30,10 +30,10 @@ html-doc :
 markdown-doc :
 	scribble ++xref-in setup/xref load-collections-xref --markdown --dest-name README.md README.scrbl
 
-homepage :
+gh-homepage :
 	( cd gh-pages && git clean -d -f && git rm --ignore-unmatch -rf . )
 	$(MAKE) html-doc
 	( cd gh-pages && git add . && git status )
 
-upload :
+gh-upload :
 	( cd gh-pages && git commit -m "update $$(date)" && git push )
