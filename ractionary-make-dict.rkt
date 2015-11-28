@@ -85,6 +85,13 @@
     ("#:phase" "syntax-parse keyword")
     ("#:mode" "open-output-file keyword")
     ("#:exists" "open-output-file keyword")
+    ("#:constructor-name" "struct option keyword")
+    ("#:methods" "struct option keyword")
+    ("#:mutable" "struct option keyword")
+    ("#:prefab" "struct option keyword")
+    ("#:property" "struct option keyword")
+    ("#:reflection-name" "struct option keyword")
+    ("#:transparent" "struct option keyword")
     ))
 
 (define (index-add-builtins! h)
