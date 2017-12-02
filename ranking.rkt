@@ -41,6 +41,7 @@
       ((under? "racket/base" str) 100)
       ((under? "racket" str) 90)
       ((under? "syntax" str) 80)
+      ((under? "scribble/html" str) 64)
       ((under? "scribble" str) 70)
       ((under? "pict" str) 65)
       ((under? "setup" str) 60)
