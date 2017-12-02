@@ -1,4 +1,7 @@
-#lang racket
+#lang racket/base
+(require (for-syntax racket/base)
+         racket/contract/base
+         racket/match)
 
 ;;; 
 ;;; provide conveniences

@@ -2,8 +2,14 @@ default : setup
 
 -include local.mk
 
+install :
+	raco pkg install --name ractionary
+
 setup :
 	raco setup ractionary
+
+check-pkg-deps :
+	raco setup --check-pkg-deps ractionary
 
 all : dict hover-dict url-table
 

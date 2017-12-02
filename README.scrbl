@@ -5,7 +5,7 @@
 @title{Ractionary}
 @bold{Racket Dictionary Generator}
 
-@author+email["Tero Hasu" "tero at ii.uib.no"]
+@author+email["Tero Hasu" "tero at hasu dot is"]
 
 @section{Introduction}
 
