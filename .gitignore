@@ -3,8 +3,8 @@
 .\#*
 *.swp
 .DS_Store
-*.el
-*.elc
+ractionary-*.el
+ractionary-*.elc
 racket-mode
 README.html
 compiled/

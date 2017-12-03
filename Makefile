@@ -11,18 +11,22 @@ setup :
 check-pkg-deps :
 	raco setup --check-pkg-deps ractionary
 
-all : dict hover-dict url-table
+all : plain-dict elisp-dict elisp-dict-help url-table
 
-dict :
+plain-dict :
 	./ractionary-make-dict.rkt --dictionary --output racket-mode
 
-hover-dict :
-	./ractionary-make-dict.rkt --dictionary --output racket-exports.el --hover
-	emacs -Q -L . -batch -f batch-byte-compile racket-exports.el
+elisp-dict :
+	./ractionary-make-dict.rkt --dictionary --output ractionary-words.el --elisp
+	emacs -Q -L . -batch -f batch-byte-compile ractionary-words.el
+
+elisp-dict-help :
+	./ractionary-make-dict.rkt --dictionary --output ractionary-words-help.el --elisp-hover
+	emacs -Q -L . -batch -f batch-byte-compile ractionary-words-help.el
 
 url-table :
-	./ractionary-make-urls.rkt --url-table --output racket-urls.el
-	emacs -Q -L . -batch -f batch-byte-compile racket-urls.el
+	./ractionary-make-urls.rkt --url-table --output ractionary-urls.el
+	emacs -Q -L . -batch -f batch-byte-compile ractionary-urls.el
 
 clean :
 	find -name compiled -type d -print0 | xargs -0 --no-run-if-empty rm -r

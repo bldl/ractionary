@@ -17,27 +17,40 @@ Currently the focus is on Emacs support. One of the generated dictionary files i
 
 @section{Supported Dictionaries}
 
-The following files may currently be generated using as shown in the included @filepath{Makefile}:
+The following files may currently be generated as shown in the included @filepath{Makefile}:
 
 @itemlist[
 
-@item{@filepath{racket-mode} is suitable for use as a drop-in Emacs Auto Complete Mode dictionary, for example, without any specific Emacs configuration required. It is just a list of symbols without any additional information, and could potentially be used for auto completion in other editors as well.}
+@item{@filepath{racket-mode} is suitable for use as a drop-in Emacs Auto Complete Mode dictionary, for example, without any specific Emacs configuration required. It is just a list of bare symbols (one per line) without any additional information, and could potentially be used for auto completion in other editors as well.}
 
-@item{@filepath{racket-exports.el} is like the above, but also includes a "Help" text for each symbol. For a given symbol there may be multiple possible definitions; these are ranked according to the "importance" of the module name, and the highest ranked one is picked. For example, @racketidfont{car} in @racketmodname[r5rs] or @racketmodname[srfi/1] probably should not be considered as important as the @racket[car] in Racket proper.}
+@item{@filepath{ractionary-words.el} is like the above, but it declares an Emacs Lisp variable @tt{ractionary-dictionary} whose value is the list of strings constituting a Racket vocabulary.}
 
-@item{@filepath{racket-urls.el} associates API documentation URLs (for a local Racket installation) with symbols. Where the same symbol has multiple documented definitions, each of them will get a URL. The generated URL table can hence be used either to implement an "I'm feeling lucky" search for the symbols in Racket, or a set of choices can be presented to the user.}
+@item{@filepath{ractionary-words-help.el} is like the above, but its @tt{ractionary-dictionary-with-help} variable also includes a "Help" text for each symbol. For a given symbol there may be multiple possible definitions; these are ranked according to the "importance" of the Racket module providing it (as defined by @filepath{ranking.rkt}), and the highest ranked one is picked. For example, @racketidfont{car} in @racketmodname[r5rs] or @racketmodname[srfi/1] probably should not be considered as important as the @racket[car] in Racket proper.}
+
+@item{@filepath{ractionary-urls.el} associates API documentation URLs (for a local Racket installation) with symbols. Where the same symbol has multiple documented definitions, each of them will get its own URL. The generated URL table can hence be used either to implement an "I'm feeling lucky" search for the symbols in Racket, or a set of choices can be presented to the user.}
 
 ]
 
+@section{See Also}
+
+@itemlist[
+
+@item{The file @filepath{company-backend-ractionary.el} in the @filepath{examples} directory implements a simple @link["https://company-mode.github.io/"]{Company} mode backend making use of a generated @tt{ractionary-dictionary}.}
+
+@item{A @link["http://terohasu.net/blog/2013-08-24-ractionary.html"]{blog post} describing one way to set up Emacs to use the generated dictionary files, including the use of @link["http://www.cx4a.org/software/auto-complete/"]{Auto Complete} mode for completion. The post is somewhat out of date with respect to the current version of Ractionary.}
+
+@item{The @link["https://github.com/greghendershott/racket-mode"]{racket-mode} major mode for Emacs, which also supports completion, of a dynamic and context sensitive kind---it should be possible to use both: a static dictionary for faster completion as you type, but setting up a trigger to escape to context-sensitive completion (possibly by calling @code{ac-stop}, then @code{completion-at-point}, if using Auto Complete mode) where the static dictionary does not have the desired symbol.}
+
+]
 @section{Missing Features}
 
-We would probably also want to generate a table of symbols naming Racket syntactic forms, i.e. macros. This could then easily be used for syntax highlighting, e.g. with @code{font-lock-add-keywords} in Emacs. Indeed, we can tell which export is syntax and which is a value. Alas, because of contracts and such lots more symbols will appear to be syntax than are actually programmer defined as macros. This would lead to it being confusing to highlight all syntax as keywords. So for now we are not concerned with highlighting.
+We might also want to generate a table of symbols naming Racket syntactic forms, i.e., macros. This could then easily be used for syntax highlighting, e.g. with @code{font-lock-add-keywords} in Emacs. Indeed, we can tell which export is syntax and which is a value. Alas, because of contracts and such lots more symbols will appear to be syntax than are actually programmer defined as macros. This would lead to it being confusing to highlight all macro names as keywords. So for now we are not concerned with highlighting.
 
 @section{License}
 
 Except where otherwise noted, the following license applies:
 
-Copyright (C) 2013-2015 University of Bergen and the authors.
+Copyright (C) 2013-2017 University of Bergen and the authors.
 
 Authors: Tero Hasu
 
@@ -61,12 +74,3 @@ ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-@section{See Also}
-
-@itemlist[
-
-@item{a @link["http://terohasu.net/blog/2013-08-24-ractionary.html"]{blog post} describing one way to set up Emacs to use the generated dictionary files (somewhat out of date wrt this version)}
-
-@item{@link["https://github.com/greghendershott/racket-mode"]{racket-mode} for Emacs, which also now supports completion, of a dynamic and context sensitive kind---it should be possible to use both: a static dictionary for faster completion as you type, but setting up a trigger to escape to context-sensitive completion (possibly by calling @code{ac-stop}, then @code{completion-at-point}) where the fixed dictionary does not have the desired symbol}
-
-]

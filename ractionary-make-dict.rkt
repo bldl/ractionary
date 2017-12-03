@@ -186,6 +186,7 @@
    [(BlueWord? w) (BlueWord-help w)]
    [else (raise-argument-error 'make-Word-help "Word?" w)]))
 
+;; Output words as plain text, one per line.
 (define (make-dictionary-file/plain all-names)
   (define (w-f out)
     (for-each 
@@ -194,23 +195,40 @@
   (write-output (dictionary-file) w-f)
   (void))
 
-(define (make-dictionary-file/hover words)
-  (define help-lst ;; (list/c string? string?)
-    (for/list ((w words))
-      (list (Word-word w) (make-Word-help w))))
-  
+(define (make-dictionary-file/elisp words)
   (define (el-basename path)
     (let-values 
 	(((base name dir) (split-path path)))
       (path->string (path-replace-suffix name ""))))
-
   (define filename (dictionary-file))
   (define bn (if filename (el-basename filename) "output"))
   (define (w-f out)
     (displayln ";; generated -- do not edit" out)
-    (displayln "(defvar racket-dictionary-with-help '(" out)
+    (displayln "(defvar ractionary-dictionary '(" out)
+    (for-each (curryr writeln out) words)
+    (displayln ") \"Dictionary of Racket words.\")" out)
+    (displayln (format "(provide '~a)" bn) out)
+    (void))
+  (write-output filename w-f)
+  (void))
+
+;; Output in Emacs Lisp, with (WORD HELP) elements, where HELP strings
+;; are suitable for display in Auto Complete hover help boxes.
+(define (make-dictionary-file/elisp-hover words)
+  (define help-lst ;; (list/c string? string?)
+    (for/list ((w words))
+      (list (Word-word w) (make-Word-help w))))
+  (define (el-basename path)
+    (let-values 
+	(((base name dir) (split-path path)))
+      (path->string (path-replace-suffix name ""))))
+  (define filename (dictionary-file))
+  (define bn (if filename (el-basename filename) "output"))
+  (define (w-f out)
+    (displayln ";; generated -- do not edit" out)
+    (displayln "(defvar ractionary-dictionary-with-help '(" out)
     (for-each (curryr writeln out) help-lst)
-    (displayln ") \"precompiled dictionary for Racket\")" out)
+    (displayln ") \"Dictionary of Racket words with help strings.\")" out)
     (displayln (format "(provide '~a)" bn) out)
     (void))
   (write-output filename w-f)
@@ -220,13 +238,18 @@
   (define h (make-hasheq))
   (index-add-builtins! h)
   (index-add-blueboxes! h)
-  (cond
-   [(hover-help?)
-    (make-dictionary-file/hover
+  (case (dictionary-format)
+   [(elisp-hover)
+    (make-dictionary-file/elisp-hover
      (sort (hash-values h)
            string<?
            #:key Word-word))]
-   [else
+   [(elisp)
+    (make-dictionary-file/elisp
+     (sort (for/list ([(k v) h])
+             (Word-word v))
+           string<?))]
+   [(plain)
     (make-dictionary-file/plain
      (sort (for/list ([(k v) h])
              (Word-word v))
@@ -237,8 +260,7 @@
 ;;; 
 
 (define dictionary-file (make-parameter #f))
-(define hover-help? (make-parameter #f))
-(define hover-blueboxes? (make-parameter #t))
+(define dictionary-format (make-parameter 'plain))
 
 (module* test #f
   (make-dictionary-file))
@@ -251,7 +273,11 @@
     (set! gen? #t)]
    [("-o" "--output") filename "write to a file"
     (dictionary-file filename)]
-   [("--hover") "use Emacs Lisp format with Help strings"
-    (hover-help? #t)])
+   [("--elisp") "emit Emacs Lisp with words only"
+    (dictionary-format 'elisp)]
+ ;  [("--elisp-desc") "emit Emacs Lisp with brief descriptions"
+ ;   (dictionary-format 'elisp-desc)]
+   [("--elisp-hover") "emit Emacs Lisp with hover help"
+    (dictionary-format 'elisp-hover)])
   (when gen?
     (make-dictionary-file)))
