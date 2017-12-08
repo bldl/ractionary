@@ -13,7 +13,7 @@ This is a tool for generating dictionaries for Racket language aware tools suppo
 @racketmodname[scribble/xref] provided documentation cross-reference information;
 and DrRacket "blue boxes" data (see @racketmodname[scribble/contract-render]).
 
-Currently the focus is on Emacs support. One of the generated dictionary files is just a plain list of words, whereas the others contain Emacs Lisp declarations.
+Currently the focus is on Emacs support. One of the generated dictionary file formats is just a plain list of words, whereas the others contain Emacs Lisp declarations.
 
 @section{Supported Dictionaries}
 
@@ -35,7 +35,7 @@ The following files may currently be generated as shown in the included @filepat
 
 @itemlist[
 
-@item{The file @filepath{company-backend-ractionary.el} in the @filepath{examples} directory implements a simple @link["https://company-mode.github.io/"]{Company} mode backend making use of a generated @tt{ractionary-dictionary}.}
+@item{The @filepath{examples} directory contains example @link["https://company-mode.github.io/"]{Company} mode backend implementations making use of Ractionary-generated dictionaries.}
 
 @item{A @link["http://terohasu.net/blog/2013-08-24-ractionary.html"]{blog post} describing one way to set up Emacs to use the generated dictionary files, including the use of @link["http://www.cx4a.org/software/auto-complete/"]{Auto Complete} mode for completion. The post is somewhat out of date with respect to the current version of Ractionary.}
 

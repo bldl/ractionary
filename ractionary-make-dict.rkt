@@ -226,34 +226,43 @@
   (define bn (if filename (el-basename filename) "output"))
   (define (w-f out)
     (displayln ";; generated -- do not edit" out)
-    (displayln "(defvar ractionary-dictionary-with-help '(" out)
-    (for-each (curryr writeln out) help-lst)
+    (display "(defvar ractionary-dictionary-with-help " out)
+    (cond
+      [(emit-string-prop?)
+       (displayln "(list" out)
+       (for ([word-help (in-list help-lst)])
+         (displayln (apply format "(propertize ~s 'help ~s)" word-help) out))]
+      [else
+       (displayln "'(" out)
+       (for-each (curryr writeln out) help-lst)])
     (displayln ") \"Dictionary of Racket words with help strings.\")" out)
     (displayln (format "(provide '~a)" bn) out)
     (void))
   (write-output filename w-f)
   (void))
 
+(define sort-string<? (make-parameter string-ci<?))
+
 (define (make-dictionary-file)
   (define h (make-hasheq))
   (index-add-builtins! h)
   (index-add-blueboxes! h)
+  (define s<? (sort-string<?))
   (case (dictionary-format)
    [(elisp-hover)
     (make-dictionary-file/elisp-hover
      (sort (hash-values h)
-           string<?
-           #:key Word-word))]
+           s<? #:key Word-word))]
    [(elisp)
     (make-dictionary-file/elisp
      (sort (for/list ([(k v) h])
              (Word-word v))
-           string<?))]
+           s<?))]
    [(plain)
     (make-dictionary-file/plain
      (sort (for/list ([(k v) h])
              (Word-word v))
-           string<?))]))
+           s<?))]))
 
 ;;; 
 ;;; main
@@ -261,6 +270,7 @@
 
 (define dictionary-file (make-parameter #f))
 (define dictionary-format (make-parameter 'plain))
+(define emit-string-prop? (make-parameter #f))
 
 (module* test #f
   (make-dictionary-file))
@@ -269,15 +279,18 @@
   (define gen? #f)
   (command-line
    #:once-each
+   [("--case-sensitive") "sort words case sensitively"
+    (sort-string<? string<?)]
    [("-d" "--dictionary") "generate a dictionary"
     (set! gen? #t)]
    [("-o" "--output") filename "write to a file"
     (dictionary-file filename)]
    [("--elisp") "emit Emacs Lisp with words only"
     (dictionary-format 'elisp)]
- ;  [("--elisp-desc") "emit Emacs Lisp with brief descriptions"
- ;   (dictionary-format 'elisp-desc)]
    [("--elisp-hover") "emit Emacs Lisp with hover help"
-    (dictionary-format 'elisp-hover)])
+    (dictionary-format 'elisp-hover)]
+   [("--string-prop") "emit metadata as string properties"
+    (emit-string-prop? #t)])
   (when gen?
-    (make-dictionary-file)))
+    (make-dictionary-file))
+  (void))

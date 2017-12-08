@@ -23,9 +23,11 @@ meta-information about the suggested words."
       ;; words, so just select those matching the prefix `arg'.
      (remove-if-not
       (lambda (c) (string-prefix-p arg c))
-      ractionary-dictionary))))
+      ractionary-dictionary))
+    ;; Candidates are sorted with locale-insensitive case folding.
+    (sorted t)))
 
-;; If you name this feature `company-ractionary' (i.e., the same as
-;; the function), then Company should load this file automatically on
-;; demand, without an explicit `autoload'.
-(provide 'company-backend-ractionary)
+;; By naming this feature `company-ractionary' (i.e., the same as the
+;; function), Company should load this file automatically on demand,
+;; without an explicit `autoload'.
+(provide 'company-ractionary)

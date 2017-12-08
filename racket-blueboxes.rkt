@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 
 #|
 
@@ -7,7 +7,8 @@ context help text displayed in DrRacket's "blue box" in the corner.
 
 |#
 
-(require racket/serialize setup/dirs)
+(require racket/serialize
+         setup/dirs)
 
 (provide fetch-files->tag->offset 
 	 fetch-strs-for-single-tag)
@@ -40,6 +41,7 @@ context help text displayed in DrRacket's "blue box" in the corner.
                     (deserialize (read port)))))))))
 
 (module+ test
+  (require racket/pretty)
   (pretty-print
    (fetch-files->tag->offset)))
 

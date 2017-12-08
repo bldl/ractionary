@@ -24,6 +24,11 @@ elisp-dict-help :
 	./ractionary-make-dict.rkt --dictionary --output ractionary-words-help.el --elisp-hover
 	emacs -Q -L . -batch -f batch-byte-compile ractionary-words-help.el
 
+# Emacs appears to be choking on this rule
+elisp-dict-help-prop :
+	./ractionary-make-dict.rkt --dictionary --output ractionary-words-help.el --elisp-hover --string-prop
+	emacs -Q -L . -batch -f batch-byte-compile ractionary-words-help.el
+
 url-table :
 	./ractionary-make-urls.rkt --url-table --output ractionary-urls.el
 	emacs -Q -L . -batch -f batch-byte-compile ractionary-urls.el

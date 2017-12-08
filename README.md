@@ -49,10 +49,9 @@ The following files may currently be generated as shown in the included
 
 ## 3. See Also
 
-* The file `"company-backend-ractionary.el"` in the `"examples"`
-  directory implements a simple
-  [Company](https://company-mode.github.io/) mode backend making use of
-  a generated `ractionary-dictionary`.
+* The `"examples"` directory contains example
+  [Company](https://company-mode.github.io/) mode backend
+  implementations making use of Ractionary-generated dictionaries.
 
 * A [blog post](http://terohasu.net/blog/2013-08-24-ractionary.html)
   describing one way to set up Emacs to use the generated dictionary

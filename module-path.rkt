@@ -1,9 +1,14 @@
-#lang racket
+#lang racket/base
 
 #|
 |#
 
-(require data/order "ranking.rkt" "util.rkt")
+(require data/order
+         racket/contract/base
+         racket/list
+         racket/match
+         "ranking.rkt"
+         "util.rkt")
 
 ;;; 
 ;;; module path sorting

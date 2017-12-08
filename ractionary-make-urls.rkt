@@ -28,10 +28,10 @@ first (supposedly "best") choice.
   
   (define syms-with-mp (make-hasheq))
 
-  (for ((entry files->tag->offset))
+  (for ([entry (in-list files->tag->offset)])
     (define file-path (first entry))
     (define tag->offset (third entry))
-    (for (((tag offset) tag->offset))
+    (for ([(tag offset) tag->offset])
       (define kind (first tag))
       (unless (eq? kind 'idx)
         (define mp-sym (second tag))
@@ -49,7 +49,7 @@ first (supposedly "best") choice.
            null)))))
   
   (define syms-with-desc
-    (for/hash (((sym vs) syms-with-mp))
+    (for/hash ([(sym vs) (in-hash syms-with-mp)])
       (define sorted-vs (sort vs mp<? #:key car))
       (define desc-vs (map
                        (lambda (v)
@@ -84,10 +84,9 @@ first (supposedly "best") choice.
   ;;(pretty-print ix)
   
   (define lst 
-    (sort (for/list (((sym vs) ix))
+    (sort (for/list ([(sym vs) ix])
             (list sym vs))
-          symbol<? 
-          #:key car))
+          symbol<? #:key car))
   
   (define (w-f out)
     (displayln ";; generated -- do not edit" out)
@@ -116,4 +115,5 @@ first (supposedly "best") choice.
    [("-o" "--output") filename "write to a file"
     (url-table-file filename)])
   (when gen?
-    (make-url-table-file (url-table-file))))
+    (make-url-table-file (url-table-file)))
+  (void))
