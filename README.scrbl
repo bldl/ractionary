@@ -3,13 +3,12 @@
 @(require (for-label racket/base))
 
 @title{Ractionary}
-@bold{Racket Dictionary Generator}
 
-@author+email["Tero Hasu" "tero at hasu dot is"]
+@author[@hyperlink["http://terohasu.net/"]{Tero Hasu}]
 
 @section{Introduction}
 
-This is a tool for generating dictionaries for Racket language aware tools support. The generation is done based on information available through Racket's own facilities, including: 
+Ractionary is a set of tools for generating dictionaries for Racket language aware tool support. The generation is done based on information available through Racket's own facilities, including: 
 @racketmodname[scribble/xref] provided documentation cross-reference information;
 and DrRacket "blue boxes" data (see @racketmodname[scribble/contract-render]).
 
@@ -35,16 +34,29 @@ The following files may currently be generated as shown in the included @filepat
 
 @itemlist[
 
-@item{The @filepath{examples} directory contains example @link["https://company-mode.github.io/"]{Company} mode backend implementations making use of Ractionary-generated dictionaries.}
+@item{The @hyperlink["https://github.com/greghendershott/racket-mode"]{racket-mode} major mode for Emacs, which also supports completion, of a dynamic and context sensitive kind---it is possible to use both: a static dictionary for readily available context-insensitive completion, and racket-mode's completion for when a program has been analyzed for information about its top-level namespace.}
 
-@item{A @link["http://terohasu.net/blog/2013-08-24-ractionary.html"]{blog post} describing one way to set up Emacs to use the generated dictionary files, including the use of @link["http://www.cx4a.org/software/auto-complete/"]{Auto Complete} mode for completion. The post is somewhat out of date with respect to the current version of Ractionary.}
+@item{The @filepath{examples} directory contains example @hyperlink["https://company-mode.github.io/"]{Company} mode backend implementations making use of Ractionary-generated dictionaries. Most interestingly, the @filepath{emacs-company-racket-mode} example shows how to achieve completion that combines (1) a Ractionary-generated dictionary, (2) @tt{racket-complete-at-point}, and (3) non-comment symbols in the current buffer.}
 
-@item{The @link["https://github.com/greghendershott/racket-mode"]{racket-mode} major mode for Emacs, which also supports completion, of a dynamic and context sensitive kind---it should be possible to use both: a static dictionary for faster completion as you type, but setting up a trigger to escape to context-sensitive completion (possibly by calling @code{ac-stop}, then @code{completion-at-point}, if using Auto Complete mode) where the static dictionary does not have the desired symbol.}
+@item{A @hyperlink["http://terohasu.net/blog/2013-08-24-ractionary.html"]{blog post} describing one way to set up Emacs to use the generated dictionary files, including the use of @hyperlink["https://github.com/auto-complete/auto-complete"]{Auto Complete} mode for completion. The post is somewhat out of date with respect to the current version of Ractionary.}
 
 ]
-@section{Missing Features}
 
-We might also want to generate a table of symbols naming Racket syntactic forms, i.e., macros. This could then easily be used for syntax highlighting, e.g. with @code{font-lock-add-keywords} in Emacs. Indeed, we can tell which export is syntax and which is a value. Alas, because of contracts and such lots more symbols will appear to be syntax than are actually programmer defined as macros. This would lead to it being confusing to highlight all macro names as keywords. So for now we are not concerned with highlighting.
+@section{Related Software}
+
+@itemlist[
+
+@item{@hyperlink["https://github.com/greghendershott/racket-mode"]{racket-mode}}
+
+@item{@hyperlink["http://www.neilvandyke.org/scribble-emacs/"]{scribble.el}}
+
+@item{@hyperlink["https://company-mode.github.io/"]{Company}}
+
+@item{@hyperlink["https://github.com/expez/company-quickhelp"]{Company quickhelp}}
+
+@item{@hyperlink["https://github.com/auto-complete/auto-complete"]{Auto Complete}}
+
+]
 
 @section{License}
 
@@ -73,4 +85,3 @@ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
 ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
