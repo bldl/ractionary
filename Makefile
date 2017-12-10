@@ -40,15 +40,7 @@ doc : html-doc markdown-doc
 
 # nicer, but not supported for a GitHub README
 html-doc :
-	scribble ++xref-in setup/xref load-collections-xref --redirect-main http://docs.racket-lang.org/ --html --dest gh-pages --dest-name gh-pages/index.html README.scrbl
+	scribble ++xref-in setup/xref load-collections-xref --redirect-main http://docs.racket-lang.org/ --html --dest web --dest-name web/index.html README.scrbl
 
 markdown-doc :
 	scribble ++xref-in setup/xref load-collections-xref --markdown --dest-name README.md README.scrbl
-
-gh-homepage :
-	( cd gh-pages && git clean -d -f && git rm --ignore-unmatch -rf . )
-	$(MAKE) html-doc
-	( cd gh-pages && git add . && git status )
-
-gh-upload :
-	( cd gh-pages && git commit -m "update $$(date)" && git push )

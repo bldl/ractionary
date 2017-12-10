@@ -6,8 +6,8 @@
 ractionary-*.el
 ractionary-*.elc
 racket-mode
-README.html
 compiled/
 retired/
 local.mk
 /gh-pages/
+/web/

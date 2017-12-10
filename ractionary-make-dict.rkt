@@ -74,6 +74,7 @@
     ("TODO" "comment")
     ("racket" "module")
     ("racket/base" "module")
+
     ("#:context" "syntax-parse keyword")
     ("#:literals" "syntax-parse keyword")
     ("#:datum-literals" "syntax-parse keyword")
@@ -83,8 +84,10 @@
     ("#:disable-colon-notation" "syntax-parse keyword")
     ("#:at" "syntax-parse keyword")
     ("#:phase" "syntax-parse keyword")
+
     ("#:mode" "open-output-file keyword")
     ("#:exists" "open-output-file keyword")
+
     ("#:constructor-name" "struct option keyword")
     ("#:methods" "struct option keyword")
     ("#:mutable" "struct option keyword")
@@ -92,6 +95,19 @@
     ("#:property" "struct option keyword")
     ("#:reflection-name" "struct option keyword")
     ("#:transparent" "struct option keyword")
+
+    ("#:date" "Scribble keyword")
+    ("#:doc" "Scribble keyword")
+    ("#:indent" "Scribble keyword")
+    ("#:obfuscate?" "Scribble keyword")
+    ("#:style" "Scribble keyword")
+    ("#:scale" "Scribble keyword")
+    ("#:suffixes" "Scribble keyword")
+    ("#:tag" "Scribble keyword")
+    ("#:tag-prefix" "Scribble keyword")
+    ("#:tag-prefixes" "Scribble keyword")
+    ("#:underline?" "Scribble keyword")
+    ("#:version" "Scribble keyword")
     ))
 
 (define (index-add-builtins! h)
