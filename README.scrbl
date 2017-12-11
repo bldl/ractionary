@@ -12,9 +12,14 @@ Ractionary is a set of tools for generating dictionaries for Racket language awa
 @racketmodname[scribble/xref] provided documentation cross-reference information;
 and DrRacket "blue boxes" data (see @racketmodname[scribble/contract-render]).
 
-Currently the focus is on Emacs support. One of the generated dictionary file formats is just a plain list of words, whereas the others contain Emacs Lisp declarations.
+Currently the focus is on @seclink["emacs-use"]{Emacs support}. One of the generated dictionary file formats is just a plain list of words, whereas the others contain Emacs Lisp declarations.
 
-@section{Supported Dictionaries}
+@section{Source Code}
+
+The Ractionary source code repository is at
+@nested[#:style 'inset]{@url{https://github.com/bldl/ractionary}}
+
+@section{Generated Dictionaries}
 
 The following files may currently be generated as shown in the included @filepath{Makefile}:
 
@@ -30,15 +35,30 @@ The following files may currently be generated as shown in the included @filepat
 
 ]
 
-@section{See Also}
+@section[#:tag "emacs-use"]{Dictionary Data Use in Emacs}
+
+Some examples of Ractionary-generated dictionary uses include:
 
 @itemlist[
 
-@item{The @hyperlink["https://github.com/greghendershott/racket-mode"]{racket-mode} major mode for Emacs, which also supports completion, of a dynamic and context sensitive kind---it is possible to use both: a static dictionary for readily available context-insensitive completion, and racket-mode's completion for when a program has been analyzed for information about its top-level namespace.}
+@item{@hyperlink["examples/emacs-company-vanilla/company-ractionary.el"]{emacs-company-vanilla}:
+A basic @hyperlink["https://company-mode.github.io/"]{Company} mode backend that does nothing but offer completions from among symbols an a Ractionary-generated dictionary.}
 
-@item{The @filepath{examples} directory contains example @hyperlink["https://company-mode.github.io/"]{Company} mode backend implementations making use of Ractionary-generated dictionaries. Most interestingly, the @filepath{emacs-company-racket-mode} example shows how to achieve completion that combines (1) a Ractionary-generated dictionary, (2) @tt{racket-complete-at-point}, and (3) non-comment symbols in the current buffer.}
+@item{@hyperlink["examples/emacs-company-quickhelp/company-ractionary.el"]{emacs-company-quickhelp}:
+A backend similar to the above, but adds help strings for possible display with @hyperlink["https://github.com/expez/company-quickhelp"]{Company quickhelp}.}
 
-@item{A @hyperlink["http://terohasu.net/blog/2013-08-24-ractionary.html"]{blog post} describing one way to set up Emacs to use the generated dictionary files, including the use of @hyperlink["https://github.com/auto-complete/auto-complete"]{Auto Complete} mode for completion. The post is somewhat out of date with respect to the current version of Ractionary.}
+@item{@hyperlink["examples/emacs-company-racket-mode/company-ractionary.el"]{emacs-company-racket-mode}:
+Complements the above Company backend with another one, which wraps the symbol completion functionality of @hyperlink["https://github.com/greghendershott/racket-mode"]{racket-mode}, whose @tt{racket-complete-at-point} function does completion in a dynamic and context sensitive manner.
+
+This example shows that it is possible to combine both a static dictionary for readily available context-insensitive completion, and more delicate and processing-intensive dynamic and contextual completion.
+The two backends of this example can further be complemented with Company's own @tt{company-dabbrev-code} backend, which provides generic-yet-contextual completion of non-comment symbols (e.g., those in the current buffer, or in same-mode buffers).}
+
+@item{@hyperlink["examples/emacs-company-scribble/company-ractionary.el"]{emacs-company-scribble}:
+This example adapts the earlier @hyperlink["examples/emacs-company-quickhelp/company-ractionary.el"]{emacs-company-quickhelp} backend for completion of @"@"-expressions' initial symbols.
+While @hyperlink["http://www.neilvandyke.org/scribble-emacs/"]{@tt{scribble-mode}} comes built in with completion for common Scribble symbols, a more extensive dictionary might be worth having when editing Scribble documents that make heavy use of additional abstractions, or particularly in languages such as @racketmodname[at-exp] @racketmodname[racket].}
+
+@item{@hyperlink["http://terohasu.net/blog/2013-08-24-ractionary.html"]{``Dictionary-Enabled Racket Support for Emacs''}:
+A blog post describing one way to set up Emacs to use the generated dictionary files for @hyperlink["https://github.com/auto-complete/auto-complete"]{Auto Complete} mode based symbol completion, and for quick opening of documentation for a symbol. The post is somewhat out of date with respect to the current version of Ractionary.}
 
 ]
 

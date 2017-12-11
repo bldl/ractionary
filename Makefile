@@ -40,7 +40,9 @@ doc : html-doc markdown-doc
 
 # nicer, but not supported for a GitHub README
 html-doc :
+	mkdir -p web/examples
 	scribble ++xref-in setup/xref load-collections-xref --redirect-main http://docs.racket-lang.org/ --html --dest web --dest-name web/index.html README.scrbl
+	rsync -av --delete --include='*.el' --include='*/' --exclude='*' examples/ web/examples/
 
 markdown-doc :
 	scribble ++xref-in setup/xref load-collections-xref --markdown --dest-name README.md README.scrbl
