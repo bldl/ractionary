@@ -243,14 +243,8 @@
   (define (w-f out)
     (displayln ";; generated -- do not edit" out)
     (display "(defvar ractionary-dictionary-with-help " out)
-    (cond
-      [(emit-string-prop?)
-       (displayln "(list" out)
-       (for ([word-help (in-list help-lst)])
-         (displayln (apply format "(propertize ~s 'help ~s)" word-help) out))]
-      [else
-       (displayln "'(" out)
-       (for-each (curryr writeln out) help-lst)])
+    (displayln "'(" out)
+    (for-each (curryr writeln out) help-lst)
     (displayln ") \"Dictionary of Racket words with help strings.\")" out)
     (displayln (format "(provide '~a)" bn) out)
     (void))
@@ -286,7 +280,6 @@
 
 (define dictionary-file (make-parameter #f))
 (define dictionary-format (make-parameter 'plain))
-(define emit-string-prop? (make-parameter #f))
 
 (module* test #f
   (make-dictionary-file))
@@ -305,8 +298,7 @@
     (dictionary-format 'elisp)]
    [("--elisp-hover") "emit Emacs Lisp with hover help"
     (dictionary-format 'elisp-hover)]
-   [("--string-prop") "emit metadata as string properties"
-    (emit-string-prop? #t)])
+   )
   (when gen?
     (make-dictionary-file))
   (void))

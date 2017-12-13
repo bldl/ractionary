@@ -50,8 +50,8 @@
 ;; why there is no use trying the `company-maybe-racket-mode' in
 ;; `scribble-mode'.
 ;;
-;; As these backends do not check for Racket-specific modes, you
-;; should not add them to `company-backends' globally, unless you
+;; As some of these backends do not check for Racket-specific modes,
+;; you should not add them to `company-backends' globally, unless you
 ;; first add an appropriate check to the `prefix' operations, e.g.:
 ;;
 ;;   (prefix (and (or (eq major-mode 'racket-mode)
@@ -107,14 +107,18 @@ via the mode started by the function
 COMMAND, ARG, and IGNORED are as for other Company backends.
 Return candidates based on `racket-complete-at-point', but only
 when `racket--in-repl-or-its-file-p' holds, in which case return
-an empty candidate list. Returns only candidate words, without
-any meta information."
+an empty candidate list. Return only candidate words, without any
+meta information. Do not offer any meta information provided by
+`racket-complete-at-point', except for definition `location',
+which is queried by the `company-show-location' command."
   (interactive (list 'interactive))
   (case command
     (interactive (company-begin-backend 'company-maybe-racket-mode))
-    (prefix (company-grab-symbol))
-    (candidates (and (racket--in-repl-or-its-file-p)
-		     (apply 'company-capf command arg ignored)))))
+    (prefix (and (eq major-mode 'racket-mode)
+		 (racket--in-repl-or-its-file-p)
+		 (company-grab-symbol)))
+    ((candidates location)
+     (apply 'company-capf command arg ignored))))
 
 ;;; 
 ;;; Scribble
