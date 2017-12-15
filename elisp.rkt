@@ -11,7 +11,7 @@
 
 (define* (elisp-escape-symbol s)
   (regexp-replace*
-   #rx"([^a-zA-Z0-9+=*/_~!@$%^&:<>{}?-])"
+   #rx"([^a-zA-Z0-9+=*/_~!@$%^&:<>{}-])"
    (symbol->string s)
    "\\\\\\1"))
 
