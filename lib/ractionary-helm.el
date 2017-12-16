@@ -18,28 +18,32 @@
 
 (require 'ractionary-urls)
 
-(defun helm-ractionary-candidates ()
-  "Return a list of documented Racket symbol names."
-  (mapcar (lambda (x) (symbol-name (car x)))
-	  ractionary-url-lookup-table))
+(defvar helm-ractionary-url-table
+  (make-hash-table :test 'equal)
+  "URLs for the `helm-ractionary-racket-docs' choices.")
+
+(defconst helm-ractionary-candidates
+  (apply
+   'append
+   (mapcar
+    (lambda (x)
+      (let ((name (symbol-name (car x))))
+	(mapcar
+	 (lambda (mp-url)
+	   (let ((s (concat name " [" (car mp-url) "]"))
+		 (url (cadr mp-url)))
+	     (puthash s url helm-ractionary-url-table)
+	     s))
+	 (cadr x))))
+    ractionary-url-lookup-table))
+  "Candidate strings for `helm-ractionary-racket-docs'.")
 
 (defun helm-ractionary-open (candidate)
-  "Open documentation for symbol CANDIDATE.
-If multiple modules export the symbol, ask the user to pick the
-module. Use `browse-url' for opening the documentation."
-  (let ((entry (assq (intern candidate) ractionary-url-lookup-table)))
-    (when entry
-      (let* ((lst (cadr entry)))
-	(when lst
-	  (let ((url
-		 (if (not (cdr lst))
-		     (cadr (car lst)) ;; sole definition
-		   (let* ((mps (mapcar #'car lst))
-			  (mp (ido-completing-read "Module: " mps nil t)))
-		     (when mp
-		       (cadr (assoc mp lst)))))))
-	    (when url
-	      (browse-url url))))))))
+  "Open documentation for CANDIDATE.
+Use `browse-url' for opening the documentation."
+  (let ((url (gethash candidate helm-ractionary-url-table)))
+    (when url
+      (browse-url url))))
 
 ;;;###autoload
 (defun helm-ractionary-racket-docs ()
@@ -49,7 +53,7 @@ action is to browse documentation for the selected symbol."
   (interactive)
   (helm :sources
 	(helm-build-sync-source "Racket symbols"
-	  :candidates #'helm-ractionary-candidates
+	  :candidates 'helm-ractionary-candidates
 	  :action '(("Open in browser" . helm-ractionary-open)))
         :buffer
 	"*helm Racket*"))

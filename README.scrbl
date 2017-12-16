@@ -60,6 +60,9 @@ While @hyperlink["http://www.neilvandyke.org/scribble-emacs/"]{@tt{scribble-mode
 @item{@hyperlink["http://terohasu.net/blog/2013-08-24-ractionary.html"]{``Dictionary-Enabled Racket Support for Emacs''}:
 A blog post describing one way to set up Emacs to use the generated dictionary files for @hyperlink["https://github.com/auto-complete/auto-complete"]{Auto Complete} mode based symbol completion, and for quick opening of documentation for a symbol. The post is somewhat out of date with respect to the current version of Ractionary.}
 
+@item{@hyperlink["lib/ractionary-helm.el"]{ractionary-helm}:
+A @hyperlink["https://emacs-helm.github.io/helm/"]{Helm}-based command for incremental narrowing and selection of a Racket symbol for which to open documentation in a web browser.}
+
 ]
 
 @section{Related Software}

@@ -99,6 +99,11 @@ Some examples of Ractionary-generated dictionary uses include:
   symbol. The post is somewhat out of date with respect to the current
   version of Ractionary.
 
+* [ractionary-helm](lib/ractionary-helm.el): A
+  [Helm](https://emacs-helm.github.io/helm/)-based command for
+  incremental narrowing and selection of a Racket symbol for which to
+  open documentation in a web browser.
+
 ## 5. Related Software
 
 * [racket-mode](https://github.com/greghendershott/racket-mode)
@@ -110,30 +115,3 @@ Some examples of Ractionary-generated dictionary uses include:
 * [Company quickhelp](https://github.com/expez/company-quickhelp)
 
 * [Auto Complete](https://github.com/auto-complete/auto-complete)
-
-## 6. License
-
-Except where otherwise noted, the following license applies:
-
-Copyright \(C\) 2013-2017 University of Bergen and the authors.
-
-Authors: Tero Hasu
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files \(the
-"Software"\), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be included
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
