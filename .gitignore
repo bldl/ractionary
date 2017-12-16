@@ -3,8 +3,8 @@
 .\#*
 *.swp
 .DS_Store
-ractionary-*.el
-ractionary-*.elc
+/ractionary-*.el
+*.elc
 racket-mode
 compiled/
 retired/

@@ -68,7 +68,7 @@ first (supposedly "best") choice.
 
 ;; 'lst' is (listof (list/c sym (list/c mp-description url))).
 (define (write-url-table lst out)
-  (displayln "(defvar ractionary-url-lookup-table '(" out)
+  (displayln "(defconst ractionary-url-lookup-table '(" out)
   (for-each 
    (lambda (x)
      (display "(" out)
@@ -82,6 +82,9 @@ first (supposedly "best") choice.
 (define (make-url-table-file filename)
   (define ix (scan))
   ;;(pretty-print ix)
+  (define feature
+    (let-values (((x y z) (split-path filename)))
+      (path-replace-extension y #"")))
   
   (define lst 
     (sort (for/list ([(sym vs) ix])
@@ -90,9 +93,10 @@ first (supposedly "best") choice.
   
   (define (w-f out)
     (displayln ";; generated -- do not edit" out)
-    (writeln `(defvar ractionary-racket-doc-dir ,(path->string (find-doc-dir))
+    (writeln `(defconst ractionary-racket-doc-dir ,(path->string (find-doc-dir))
                "Racket installation's \"doc\" directory.") out)
-    (write-url-table lst out))
+    (write-url-table lst out)
+    (displayln (format "(provide '~a)" feature) out))
 
   (write-output filename w-f)
   (void))
