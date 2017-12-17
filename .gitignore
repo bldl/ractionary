@@ -9,5 +9,6 @@ racket-mode
 compiled/
 retired/
 local.mk
+/doc/
 /gh-pages/
 /web/

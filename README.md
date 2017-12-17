@@ -99,7 +99,7 @@ Some examples of Ractionary-generated dictionary uses include:
   symbol. The post is somewhat out of date with respect to the current
   version of Ractionary.
 
-* [ractionary-helm](lib/ractionary-helm.el): A
+* [ractionary-helm](emacs/ractionary-helm.el): A
   [Helm](https://emacs-helm.github.io/helm/)-based command for
   incremental narrowing and selection of a Racket symbol for which to
   open documentation in a web browser.

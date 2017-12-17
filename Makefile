@@ -36,10 +36,10 @@ doc : html-doc markdown-doc
 
 # nicer, but not supported for a GitHub README
 html-doc :
-	mkdir -p web/examples web/lib
-	scribble ++xref-in setup/xref load-collections-xref --redirect-main http://docs.racket-lang.org/ --html --dest web --dest-name web/index.html README.scrbl
+	mkdir -p web/examples web/emacs
+	scribble ++main-xref-in --redirect-main http://docs.racket-lang.org/ --html --dest web --dest-name web/index.html ractionary.scrbl
 	rsync -av --delete --include='*.el' --include='*/' --exclude='*' examples/ web/examples/
-	rsync -av --delete --include='*.el' --include='*/' --exclude='*' lib/ web/lib/
+	rsync -av --delete --include='*.el' --include='*/' --exclude='*' emacs/ web/emacs/
 
 markdown-doc :
-	scribble ++xref-in setup/xref load-collections-xref --markdown --dest-name README.md README.scrbl
+	scribble ++main-xref-in --markdown --dest-name README.md ractionary.scrbl
