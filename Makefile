@@ -32,7 +32,7 @@ clean :
 	-rm *.elc
 	find -name compiled -type d -print0 | xargs -0 --no-run-if-empty rm -r
 
-doc : html-doc markdown-doc
+doc : html-doc
 
 # nicer, but not supported for a GitHub README
 html-doc :
@@ -40,6 +40,3 @@ html-doc :
 	scribble ++main-xref-in --redirect-main http://docs.racket-lang.org/ --html --dest web --dest-name web/index.html ractionary.scrbl
 	rsync -av --delete --include='*.el' --include='*/' --exclude='*' examples/ web/examples/
 	rsync -av --delete --include='*.el' --include='*/' --exclude='*' emacs/ web/emacs/
-
-markdown-doc :
-	scribble ++main-xref-in --markdown --dest-name README.md ractionary.scrbl
